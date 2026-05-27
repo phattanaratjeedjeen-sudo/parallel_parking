@@ -101,13 +101,13 @@ State 6  Parked            Apply hand-brake; log total shunting actions
 
 ### Multi-Trial Process Flowchart
 
-![Multi-trial process flowchart](image-2.png)
+![Multi-trial process flowchart](pic\image-2.png)
 
 ---
 
-### Collision Check
+### Collision Check<br>
 
-![Collision check diagram](image-1.png)
+![Collision check diagram](pic\image-1.png)
 
 > **Gap formula:**
 > ```
@@ -211,6 +211,72 @@ ARC1_YAW_DEG           = 45     # ← theta output
 ---
 ---
 ARC1_YAW_DEG and MAX_STEER_ANGLE_STATE2 can calculate from pathtest.py
+
+---
+## Result 
+**Tesla Model 3** <br>
+### Parking slot length: 10.2 m Gap between parked cars: 5.4 m Initial steering angle: 9° Reverse until the yaw angle reaches 9°
+<p align="center">
+<img src="Result\New_Tesla_model3_x=20_yaw=9.gif" width="400">
+ </p>
+ <p align="center">
+ <img src="pic\New_Tesla_model3_x=20_yaw=9.png" width="700"> </p>
+ <br>
+
+### Parking slot length: 7.2 m Gap between parked cars: 2.4 m Initial steering angle: 19° Reverse until the yaw angle reaches 38°
+<p align="center">
+<img src="Result\New_Tesla_model3_x=17_yaw=22.gif" width="400">
+ </p>
+ <p align="center">
+ <img src="pic\New_Tesla_model3_x=17_yaw=22.png" width="700"> </p><br>
+
+### Parking slot length: 6.2 m Gap between parked cars: 1.4 m Initial steering angle: 26° Reverse until the yaw angle reaches 43°
+<p align="center">
+<img src="Result\New_Tesla_model3_x=16_yaw=43.gif" width="400">
+ </p>
+ <p align="center">
+ <img src="pic\New_Tesla_model3_x=16_yaw=43.png" width="700"> </p><br>
+
+ ### Parking slot length: 5.2 m Gap between parked cars: 0.4 m Initial steering angle: 35° Reverse until the yaw angle reaches 47°
+<p align="center">
+<img src="Result\New_Tesla_model3_x=15_yaw=47.gif" width="400">
+ </p>
+ <p align="center">
+ <img src="pic\New_Tesla_model3_x=15_yaw=47.png" width="700"> </p><br>
+
+ **Audi etron** <br>
+ ### Parking slot length: 10.1 m Gap between parked cars: 5.2 m Initial steering angle: 10° Reverse until the yaw angle reaches 27°
+<p align="center">
+<img src="Result\New_Audi_etron_x=20_yaw=27.gif" width="400">
+ </p>
+ <p align="center">
+ <img src="pic\New_Audi_etron_x=20_yaw=27.png" width="700"> </p>
+ <br>
+
+### Parking slot length: 7.1 m Gap between parked cars: 2.2 m Initial steering angle: 20° Reverse until the yaw angle reaches 33°
+<p align="center">
+<img src="Result\New_Audi_etron_x=17_yaw=33.gif" width="400">
+ </p>
+ <p align="center">
+ <img src="pic\New_Audi_etron_x=17_yaw=33.png" width="700"> </p>
+ <br>
+
+### Parking slot length: 6.1 m Gap between parked cars: 1.2 m Initial steering angle: 29° Reverse until the yaw angle reaches 35°
+<p align="center">
+<img src="Result\New_Audi_etron_x=16_yaw=35.gif" width="400">
+ </p>
+ <p align="center">
+ <img src="pic\New_Audi_etron_x=16_yaw=35.png" width="700"> </p>
+ <br>
+
+### Parking slot length: 5.1 m Gap between parked cars: 0.2 m Initial steering angle: 35° Reverse until the yaw angle reaches 35°
+<p align="center">
+<img src="Result\New_Audi_etron_x=15_yaw=35.gif" width="400">
+ </p>
+ <p align="center">
+ <img src="pic\New_Audi_etron_x=15_yaw=35.png" width="700"> </p>
+ <br>
+---
 
 ## License
 
