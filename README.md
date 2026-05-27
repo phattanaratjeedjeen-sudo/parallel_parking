@@ -6,17 +6,7 @@ A fully autonomous parallel parking system built on the [CARLA](https://carla.or
 
 ## Features
 
-- **7-state parking state machine** — pull-up → reverse arc → steer unwind → shunt loop → parked
-- **PID speed controller** (State 1) for smooth forward pull-up
-- **Dynamic geometry** — wheelbase, turning radius, and reference path are derived at runtime from the vehicle's physics model
-- **6 obstacle sensors** (front, rear, FL, FR, RL, RR) with colour-coded HUD alerts
-- **Real-time Pygame display** — external/cockpit view toggle (`T`), reference path toggle (`C`)
-- **Automatic data logging**
-  - Pose log (x, y, elapsed time, velocity, acceleration, jerk, direction) → timestamped `.txt`
-  - Steering angle log (elapsed time, wheel angle °) → timestamped `.txt`
-  - Vehicle model + parking constants → timestamped `.csv`
-- **Graph plotter** — one command renders 6 analysis plots from any saved run
-
+- **5-state parking state machine** — pull-up → reverse arc → steer unwind → shunt loop → parked
 ---
 
 ## Project Structure
@@ -58,31 +48,24 @@ CarlaUE4.exe
 ```
 
 ### 2. Run the parking simulation
-
+This project run in window with python version 3.7
 ```bash
-python spawn_car.py
+py -3.7 .\spawn_car_.py  
 ```
 
 The script will:
 1. Connect to `localhost:2000`
 2. Spawn two parked Audi e-tron vehicles and one ego vehicle
-3. Attach RGB camera, LiDAR, IMU, and 6 obstacle sensors to the ego car
-4. Execute the autonomous parking sequence autonomously
-5. Save logs on exit
+3. Execute the autonomous parking sequence autonomously
+4. Save logs on exit
 
 ### 3. Plot the results
 
 After a run, two log files are created in the working directory:
-
-```
-New_Audi_etron_x=16_yaw=35_pose.txt    # or the auto-timestamped green_path_*.txt
-New_Audi_etron_x=16_yaw=35_steer.txt   # or steer_log_*.txt
-```
-
-Edit the filenames at the top of `graphplotter.py` to match, then run:
+Then Edit the filenames at the top of `graphplotter.py` to match, then run:
 
 ```bash
-python graphplotter.py
+py -3.7 .\graphplotter.py
 ```
 
 This opens a 2×3 figure with:
@@ -98,21 +81,11 @@ This opens a 2×3 figure with:
 
 ---
 
-## Controls (during simulation)
-
-| Key | Action |
-|---|---|
-| `T` | Toggle external ↔ cockpit camera view |
-| `C` | Toggle reference path visibility |
-| Close window | End simulation and save logs |
-
----
-
 ## Parking State Machine
 
 ```
 State 1  FWD pull-up      Drive forward to pull-up X using PID control
-State 2  Arc 1 rev-right  Reverse with full right lock until yaw ≥ 45°
+State 2  Arc 1 rev-right  Reverse with full right lock until yaw ≥ ARC1_YAW_DEG
 State 3  Steer unwind      Hold brake, gradually unwind steering to 0°
 State 5  Shunt loop        Alternate fwd/rev shunts (full-lock each way)
                            until |yaw| ≤ 2° and speed < 0.02 m/s
@@ -143,12 +116,77 @@ THROTTLE_FWD      = 0.20   # Forward throttle in shunt loop
 THROTTLE_REV      = 0.32   # Reverse throttle
 PULL_UP_X         = 14.5   # X coordinate to stop before reversing
 ARC1_YAW_DEG      = 45     # Yaw target for the first reversing arc
+MAX_STEER_ANGLE_STATE2 = 30
+```
+---
+
+## `pathtest.py` — Parking Geometry Calculator
+
+### Summary
+
+`pathtest.py` is a standalone geometry tool that calculates the **optimal arc parameters** for the parallel parking manoeuvre before you run the full simulation. Given the vehicle's wheelbase, maximum steering angle, start position, and target parking-spot coordinates, it solves the two-circle rolling geometry and outputs the two constants that must be pasted into `spawn_car.py`:
+
+| Output | Maps to constant | Description |
+|---|---|---|
+| `steer angle (degrees)` | `MAX_STEER_ANGLE_STATE2` | Steering lock to apply during Arc 1 |
+| `theta (degrees)` | `ARC1_YAW_DEG` | Yaw angle target to exit Arc 1 and begin the unwind |
+
+---
+
+### How It Works
+
+The script models the classic two-tangent-circle parallel parking geometry:
+
+```
+      Start pos (Einit_x, Einit_y)
+           │
+           │  Arc 1 (radius Reinitr) — right reverse lock
+           │
+      Tangent point ──► Arc 2 (radius Remin) — left reverse lock
+                               │
+                         Parking spot (Ex, Ey)
 ```
 
-PID gains (State 1):
+1. **Minimum turning radius** `Remin` is derived from the wheelbase `a` and `steer_angle_deg`.
+2. The **left circle centre** `(clx, cly)` is placed directly above the parking spot at `Remin`.
+3. The **right circle centre** `(Crx, Cry)` is solved so that the two circles are externally tangent — ensuring the car can transition smoothly from Arc 1 to Arc 2.
+4. `theta` is the yaw the vehicle has rotated through at the tangent point → this is `ARC1_YAW_DEG`.
+5. `thetasteer` is the steering angle required for Arc 1 → this is `MAX_STEER_ANGLE_STATE2`.
+
+---
+
+### Configuration (edit the top of `pathtest.py`)
 
 ```python
-Kp, Ki, Kd = 0.7, 0.0, 0.7
+Ex, Ey             = 10, 9.5    # Target parking spot (CARLA world coords)
+Einit_x, Einit_y   = 15, 12     # Vehicle position at the start of Arc 1
+a                  = 2.9        # Wheelbase (metres) — check vehicle specs
+steer_angle_deg    = 30         # Maximum physical steering lock (degrees)
+```
+
+> **Tip:** `Einit_x` corresponds to `PULL_UP_X` in `spawn_car.py` — set them to the same value.
+
+---
+
+### Running the Calculator
+
+No CARLA server required — this is pure Python:
+
+```bash
+py -3.7 .\pathtest.py
+```
+
+**Example output:**
+```
+steer angle (degrees):  30.0
+45.0
+```
+
+Copy the two values into `spawn_car.py`:
+
+```python
+MAX_STEER_ANGLE_STATE2 = 30.0   # ← steer angle output
+ARC1_YAW_DEG           = 45     # ← theta output
 ```
 
 ---
