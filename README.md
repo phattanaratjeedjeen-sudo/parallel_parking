@@ -95,6 +95,26 @@ State 6  Parked            Apply hand-brake; log total shunting actions
 > State 4 (straight reverse) is available in the codebase for alternative manoeuvre strategies.
 
 ---
+---
+
+## Diagrams
+
+### Multi-Trial Process Flowchart
+
+![Multi-trial process flowchart](image-2.png)
+
+---
+
+### Collision Check
+
+![Collision check diagram](image-1.png)
+
+> **Gap formula:**
+> ```
+> extent.x = car_length   OR   hitblock / 2 + gap
+> ```
+
+---
 
 ## Output Files
 
@@ -118,7 +138,6 @@ PULL_UP_X         = 14.5   # X coordinate to stop before reversing
 ARC1_YAW_DEG      = 45     # Yaw target for the first reversing arc
 MAX_STEER_ANGLE_STATE2 = 30
 ```
----
 
 ## `pathtest.py` — Parking Geometry Calculator
 
@@ -190,6 +209,8 @@ ARC1_YAW_DEG           = 45     # ← theta output
 ```
 
 ---
+---
+ARC1_YAW_DEG and MAX_STEER_ANGLE_STATE2 can calculate from pathtest.py
 
 ## License
 
