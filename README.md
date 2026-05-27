@@ -30,9 +30,6 @@ A fully autonomous parallel parking system built on the [CARLA](https://carla.or
 | `carla` Python package | Provided with the CARLA installation (`PythonAPI/`) |
 | `pygame` | `pip install pygame` |
 | `numpy` | `pip install numpy` |
-| `matplotlib` | `pip install matplotlib` (for `graphplotter.py`) |
-| `keyboard` | `pip install keyboard` |
-
 ---
 
 ## Getting Started
@@ -276,7 +273,7 @@ ARC1_YAW_DEG and MAX_STEER_ANGLE_STATE2 can calculate from pathtest.py
  <p align="center">
  <img src="pic\New_Audi_etron_x=15_yaw=35.png" width="700"> </p>
  <br>
- 
+
 ---
 
 ## License
