@@ -276,6 +276,3 @@ ARC1_YAW_DEG and MAX_STEER_ANGLE_STATE2 can calculate from pathtest.py
 
 ---
 
-## License
-
-This project is provided for research and educational use. CARLA is licensed under the MIT License.
