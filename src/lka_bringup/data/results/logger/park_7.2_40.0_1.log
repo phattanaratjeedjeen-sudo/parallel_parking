@@ -1,0 +1,11 @@
+[2026-06-14 00:01:34.718] [INFO] Initial pose: X=71.00, Y=-107.50, Yaw=0.00 deg
+[2026-06-14 00:01:34.718] [INFO] Lmin: 6.4660 m
+[2026-06-14 00:01:34.718] [WARN] d_C_Einit: 1.54 < d_EC_lmin: 4.39, Move forward
+[2026-06-14 00:01:39.149] [INFO] Lmin: 6.4660 m
+[2026-06-14 00:01:39.149] [INFO] Initial pose for planning: X=76.41, Y=-107.50
+[2026-06-14 00:01:39.206] [INFO] Begin FIRST_ARC
+[2026-06-14 00:01:47.654] [INFO] Transitioning to WAIT_STEERING_2
+[2026-06-14 00:01:48.007] [INFO] Begin SECOND_ARC
+[2026-06-14 00:02:03.218] [INFO] Single trial: complete, x_c: 70.12, y_c: -104.96, yaw_e: -0.79 deg
+[2026-06-14 00:02:03.219] [INFO] Single trial parking complete
+[2026-06-14 00:02:04.295] [ERROR] Plot service not available

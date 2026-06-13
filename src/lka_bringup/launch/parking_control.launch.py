@@ -26,6 +26,6 @@ def generate_launch_description():
     
     return LaunchDescription([
         planning_node,
-        log_node,
-        plot_node
+        # log_node,
+        # plot_node
     ])

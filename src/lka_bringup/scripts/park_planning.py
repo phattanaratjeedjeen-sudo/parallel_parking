@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 import json
 import math
+import os
+import datetime
 import rclpy
 from rclpy.node import Node
 from nav_msgs.msg import Odometry
@@ -9,19 +11,53 @@ from tf_transformations import euler_from_quaternion
 from std_msgs.msg import Int32
 from std_srvs.srv import Trigger
 
+class LoggerWrapper:
+    def __init__(self, ros_logger, file_handle):
+        self.ros_logger = ros_logger
+        self.file_handle = file_handle
+        
+    def _write(self, level, msg):
+        if self.file_handle and not self.file_handle.closed:
+            timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+            self.file_handle.write(f"[{timestamp}] [{level}] {msg}\n")
+            self.file_handle.flush()
+            
+    def info(self, msg):
+        self.ros_logger.info(msg)
+        self._write('INFO', msg)
+        
+    def warn(self, msg):
+        if hasattr(self.ros_logger, 'warning'):
+            self.ros_logger.warning(msg)
+        else:
+            self.ros_logger.warn(msg)
+        self._write('WARN', msg)
+        
+    def error(self, msg):
+        self.ros_logger.error(msg)
+        self._write('ERROR', msg)
+        
+    def fatal(self, msg):
+        self.ros_logger.fatal(msg)
+        self._write('FATAL', msg)
+        
+    def debug(self, msg):
+        self.ros_logger.debug(msg)
+        self._write('DEBUG', msg)
+
 class ParkingController(Node):
     def __init__(self):
         super().__init__('parking_controller')
         
         # vehicle parameters
-        self.delta_max = math.radians(30.0)
+        self.delta_max = math.radians(35.0)
         self.a = 3.005                  # from rear axle to front axle     
         self.rear_axle_offset = 1.42    # from origin backward
         self.b = 1.67 / 2.0             # half track
         self.d_front = 0.81             # front overhang
         self.d_rear = 0.98              # rear overhang
         self.d_side = 0.25              # side distance to mirror
-        self.L = 6.2                    # parking spot length 
+        self.L = 6.7                    # parking spot length 
         
         self.center_target_pose = (69.9, -105.0, 0.0)   # target pose (car's center) (x, y, yaw)
         self.center_start_pose = None                   # initial pose (car's center) (x, y, yaw) 
@@ -33,6 +69,12 @@ class ParkingController(Node):
         self.trials_completed = 1
         self.total_trials = 1                 
         self.plot_triggered = False
+
+        self.log_dir = os.path.expanduser('~/park_ws/src/lka_bringup/data/results/logger')
+        os.makedirs(self.log_dir, exist_ok=True)
+        self.log_file = self.get_next_log_filename()
+        self.log_file_handle = open(self.log_file, 'w', encoding='utf-8')
+        self._custom_logger = LoggerWrapper(super().get_logger(), self.log_file_handle)
 
         self.cmd_pub = self.create_publisher(
             CarlaEgoVehicleControl, 
@@ -58,11 +100,26 @@ class ParkingController(Node):
             self.odom_callback, 
             10
         )
+
+    def get_logger(self):
+        if not hasattr(self, '_custom_logger'):
+            return super().get_logger()
+        return self._custom_logger
+
+    def get_next_log_filename(self):
+        index = 1
+        max_steer_deg = round(math.degrees(self.delta_max), 1)
+        while True:
+            filename = os.path.join(self.log_dir, f'park_{self.L}_{max_steer_deg}_{index}.log')
+            if not os.path.exists(filename):
+                return filename
+            index += 1
         
     def get_config_callback(self, request, response):
         config_data = {
             "L": self.L,
-            "max_steer": round(math.degrees(self.delta_max), 1)
+            "max_steer": round(math.degrees(self.delta_max), 1),
+            "car_length": self.a + self.d_front + self.d_rear
         }
         response.success = True
         response.message = json.dumps(config_data)
@@ -275,13 +332,13 @@ class ParkingController(Node):
             T_e_x, T_e_y = self.plan['T_e']
             dist = math.sqrt((x_e - T_e_x)**2 + (y_e - T_e_y)**2)
 
-            # track minimum distance to T_e to detect when start moving away
+            # track minimum distance to T_e to detect moving away
             if not hasattr(self, 'min_dist'):
                 self.min_dist = dist
             if dist < self.min_dist:
                 self.min_dist = dist
             
-            # transition if close, or pass the closest point and moving away.
+            # transition if close, or pass the closest point and moving away
             if dist < 0.25 or (self.min_dist < 0.4 and dist > self.min_dist + 0.05):
                 self.current_state = 'WAIT_STEERING_2'
                 self.get_logger().info('Transitioning to WAIT_STEERING_2')
@@ -304,7 +361,7 @@ class ParkingController(Node):
             # single trial stop condition 
             yaw_diff = abs(yaw_e - self.center_target_pose[2])
             dist = math.sqrt((x_c - self.center_target_pose[0])**2 + (y_c - self.center_target_pose[1])**2)
-            if yaw_diff < math.radians(1.5) and dist < 0.15:
+            if yaw_diff < math.radians(3) and dist < 0.25:
                 self.get_logger().info(
                     "Single trial: complete, "
                     f"x_c: {x_c:.2f}, " 
@@ -418,6 +475,11 @@ class ParkingController(Node):
         self.trial_pub.publish(trial_msg)
 
         self.cmd_pub.publish(control)
+
+    def destroy_node(self):
+        if hasattr(self, 'log_file_handle') and self.log_file_handle and not self.log_file_handle.closed:
+            self.log_file_handle.close()
+        super().destroy_node()
 
 def main(args=None):
     rclpy.init(args=args)

@@ -4,6 +4,7 @@ import glob
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
+import json
 
 import rclpy
 from rclpy.node import Node
@@ -17,18 +18,37 @@ class PlotResultsNode(Node):
         os.makedirs(self.plot_dir, exist_ok=True)
         
         self.plot_srv = self.create_service(Trigger, '/carla/ego_vehicle/plot_results', self.plot_request_callback)
+        self.config_client = self.create_client(Trigger, '/carla/ego_vehicle/get_park_config')
 
     def plot_request_callback(self, request, response):
-        self.plot_parking_results()
-        response.success = True
-        response.message = "Plot generated successfully."
-        self.create_timer(1.0, self.shutdown_node)
+        if self.config_client.wait_for_service(timeout_sec=1.0):
+            req = Trigger.Request()
+            future = self.config_client.call_async(req)
+            future.add_done_callback(self.config_response_callback)
+            response.success = True
+            response.message = "Plot generation started."
+        else:
+            self.get_logger().error('Config service not available')
+            response.success = False
+            response.message = "Config service not available."
         return response
         
+    def config_response_callback(self, future):
+        try:
+            response = future.result()
+            if response.success:
+                config = json.loads(response.message)
+                car_length = float(config.get("car_length", 4.795))
+                self.plot_parking_results(car_length)
+        except Exception as e:
+            self.get_logger().error(f"Failed to get config from service: {e}")
+        finally:
+            self.create_timer(1.0, self.shutdown_node)
+
     def shutdown_node(self):
         rclpy.shutdown()
 
-    def plot_parking_results(self):
+    def plot_parking_results(self, car_length):
         # Find the latest CSV file in the results/csv directory
         csv_files = sorted(glob.glob(os.path.join(self.csv_dir, '*.csv')), key=os.path.getmtime)
         if not csv_files:
@@ -84,21 +104,11 @@ class PlotResultsNode(Node):
         ax.set_title('Steering Command Over Time')
         ax.grid(True, alpha=0.3)
         ax.axhline(y=0, color='k', linestyle='--', alpha=0.3)
-        
-        # Plot 3: Y Position vs Time
+
+        # Plot 3: X Position vs Time
         ax = axes[1, 0]
-        ax.plot(time, df['Y Position (m)'], 'g-', linewidth=2, label='Y Position')
-        ax.set_xlabel('Time (s)')
-        ax.set_ylabel('Y Position (m)')
-        ax.set_title('Y Position Over Time')
-        ax.grid(True, alpha=0.3)
-        ax.legend()
-        
-        # Plot 4: X Position vs Time
-        ax = axes[1, 1]
         ax.plot(time, df['X Position (m)'], 'b-', linewidth=2, label='X Position')
         
-        # Dynamically extract L from filename to set upper limit (format: park_L_maxsteer_index)
         L = 6.2  # Default fallback
         try:
             parts = base_name.split('_')
@@ -108,13 +118,22 @@ class PlotResultsNode(Node):
             pass
             
         lower_limit = 69.8
-        upper_limit = lower_limit + L
+        upper_limit = lower_limit + L - car_length
         
         ax.axhline(y=upper_limit, color='orange', linestyle='--', linewidth=2, label=f'Upper Limit ({upper_limit:.2f})')
         ax.axhline(y=lower_limit, color='orange', linestyle='--', linewidth=2, label=f'Lower Limit ({lower_limit:.2f})')
         ax.set_xlabel('Time (s)')
         ax.set_ylabel('X Position (m)')
         ax.set_title('X Position Over Time')
+        ax.grid(True, alpha=0.3)
+        ax.legend()
+        
+        # Plot 4: Y Position vs Time
+        ax = axes[1, 1]
+        ax.plot(time, df['Y Position (m)'], 'g-', linewidth=2, label='Y Position')
+        ax.set_xlabel('Time (s)')
+        ax.set_ylabel('Y Position (m)')
+        ax.set_title('Y Position Over Time')
         ax.grid(True, alpha=0.3)
         ax.legend()
         
@@ -136,30 +155,7 @@ class PlotResultsNode(Node):
         output_file = os.path.join(self.plot_dir, f'{base_name}.png')
         plt.savefig(output_file, dpi=300, bbox_inches='tight')
         self.get_logger().info(f"Plot successfully saved to: {output_file}")
-        
-        # Print statistics to the ROS log
-        self.get_logger().info(f"=== Parking Maneuver Statistics ===")
-        self.get_logger().info(f"L_min: {self.calculate_l_min(df['Steering Command'].max()):.2f} m")
-        self.get_logger().info(f"Total time: {time.iloc[-1]:.2f} s")
-        self.get_logger().info(f"Start position: ({df['X Position (m)'].iloc[0]:.2f}, {df['Y Position (m)'].iloc[0]:.2f})")
-        self.get_logger().info(f"End position: ({df['X Position (m)'].iloc[-1]:.2f}, {df['Y Position (m)'].iloc[-1]:.2f})")
-        self.get_logger().info(f"Start yaw: {df['Yaw (deg)'].iloc[0]:.2f} deg")
-        self.get_logger().info(f"End yaw: {df['Yaw (deg)'].iloc[-1]:.2f} deg")
-        self.get_logger().info(f"Max steering: {df['Steering Command'].max():.2f} deg")
-        self.get_logger().info(f"Min steering: {df['Steering Command'].min():.2f} deg")
 
-    def calculate_l_min(self, steer_max):
-        a = 3.005
-        b = 1.67 / 2.0
-        d_front = 0.81
-        d_rear = 0.98
-        d_side = 0.25
-        
-        RE_min = a / np.tan(np.deg2rad(steer_max))
-        R_Bl_min = np.sqrt((RE_min + b + d_side)**2 + (a + d_front)**2)
-        L_min = d_rear + np.sqrt(R_Bl_min**2 - (RE_min - b - d_side)**2)
-        
-        return L_min
 
 def main(args=None):
     rclpy.init(args=args)

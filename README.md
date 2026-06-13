@@ -8,22 +8,27 @@
 - [Core Strategy](#core-strategy)
 - [Simulation Method](#simulation-method)
 - [Result](#result)
+- [Discussion](#discussion)
+- [Conclusion](#conclusion)
 - [Reference](#reference)
 
 
 ## Use This Package
 
-1. Install CARLA 0.9.16
+### Environment
+- OS: ubuntu 24.04
+- ROS2: Jazzy
+- Carla: 0.9.16
+- Carla-ROS bridge
 
-2. Install CARLA ROS bridge
-
-3. Clone this package
+### Steps
+1. Clone this package
     ```bash
     cd ~
     git clone -b SINGLE https://github.com/phattanaratjeedjeen-sudo/parallel_parking.git
     ```
 
-4. Set up environment
+2. Set up environment
     ```bash
     cd ~/park_ws
     colcon build && source install/setup.bash
@@ -34,7 +39,7 @@
     source ~/.bashrc
     ```
 
-5. Launch
+3. Launch
     ```bash
     cd ~/carla
     ./CarlaUE4.sh -windowed -ResX=800 -ResY=600 -prefernvidia -quality-level=Low
@@ -66,6 +71,12 @@
 
 
 ## Result
+
+
+## Discussion
+
+
+## Conclusion
 
 
 ## Reference
