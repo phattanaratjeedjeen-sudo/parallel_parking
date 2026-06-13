@@ -1,87 +1,49 @@
 #!/usr/bin/env python3
-import json
 import math
 import rclpy
 from rclpy.node import Node
 from nav_msgs.msg import Odometry
 from carla_msgs.msg import CarlaEgoVehicleControl
 from tf_transformations import euler_from_quaternion
-from std_msgs.msg import Int32
-from std_srvs.srv import Trigger
 
 class ParkingController(Node):
     def __init__(self):
         super().__init__('parking_controller')
         
-        # vehicle parameters
-        self.delta_max = math.radians(30.0)
-        self.a = 3.005                  # from rear axle to front axle     
+        # Vehicle Dimensions
+        self.a = 3.005
+        self.delta_max = math.radians(35.0)
         self.rear_axle_offset = 1.42    # from origin backward
-        self.b = 1.67 / 2.0             # half track
-        self.d_front = 0.81             # front overhang
-        self.d_rear = 0.98              # rear overhang
-        self.d_side = 0.25              # side distance to mirror
-        self.L = 6.2                    # parking spot length 
+        self.b = 1.67 / 2.0             # Half track
+        self.d_front = 0.81             # Front overhang
+        self.d_rear = 0.98              # Rear overhang
+        self.d_side = 0.25              # Side distance to mirror
+        self.L = 6.2                    # Parking spot length 
         
         self.center_target_pose = (69.9, -105.0, 0.0)   # target pose (car's center) (x, y, yaw)
-        self.center_start_pose = None                   # initial pose (car's center) (x, y, yaw) 
-        self.offset_limit = 0.10                        # limit offset for shunt adjustments (m)  
-        self.init_pose_captured = False    
+        self.center_start_pose = None                   # initial pose (car's center) (x, y, yaw)
+        self.init_pose_captured = False  
+        self.offset_limit = 0.10                        # Limit offset for shunt adjustments (m)     
+
         self.plan = None
         self.is_multiple_trials = False
         self.current_state = 'EVALUATING'
         self.trials_completed = 1
         self.total_trials = 1                 
-        self.plot_triggered = False
 
         self.cmd_pub = self.create_publisher(
             CarlaEgoVehicleControl, 
             '/carla/ego_vehicle/vehicle_control_cmd', 
             10
         )
-        self.trial_pub = self.create_publisher(Int32, 
-            '/carla/ego_vehicle/trials', 
-            10
-        )
-        self.config_srv = self.create_service(
-            Trigger, 
-            '/carla/ego_vehicle/get_park_config', 
-            self.get_config_callback
-        )
-        self.plot_client = self.create_client(
-            Trigger,
-            '/carla/ego_vehicle/plot_results'
-        )
+
         self.odom_sub = self.create_subscription(
             Odometry, 
             '/carla/ego_vehicle/odometry', 
             self.odom_callback, 
             10
         )
-        
-    def get_config_callback(self, request, response):
-        config_data = {
-            "L": self.L,
-            "max_steer": round(math.degrees(self.delta_max), 1)
-        }
-        response.success = True
-        response.message = json.dumps(config_data)
-        return response
-        
-    def trigger_plot(self):
-        if self.plot_client.wait_for_service(timeout_sec=1.0):
-            req = Trigger.Request()
-            future = self.plot_client.call_async(req)
-            future.add_done_callback(self.plot_response_callback)
-        else:
-            self.get_logger().error('Plot service not available')
-            
-    def plot_response_callback(self, future):
-        try:
-            response = future.result()
-            self.get_logger().info(f"Plot response: {response.message}")
-        except Exception as e:
-            self.get_logger().error(f"Failed to call plot service: {e}")
+
 
     def get_rear_axle(self, x, y, yaw):
         ex = x - self.rear_axle_offset * math.cos(yaw)
@@ -98,7 +60,7 @@ class ParkingController(Node):
         
         RE_min = self.a / math.tan(self.delta_max)
 
-        # minimum parking spot
+        # Minimum parking spot
         R_Bl_min = math.sqrt((RE_min + self.b + self.d_side)**2 + (self.a + self.d_front)**2)
         L_min = self.d_rear + math.sqrt(R_Bl_min**2 - (RE_min - self.b - self.d_side)**2)
         
@@ -113,6 +75,7 @@ class ParkingController(Node):
                     self.get_logger().info("L < L_min, implement n trials")
                 l = self.L - (self.a + self.d_front + self.d_rear)
                 
+                # calculate exact 'd': d = y_F - y_F1
                 x_F = self.L - self.d_rear
                 if R_Bl_min > x_F:
                     y_F1 = RE_min - math.sqrt(R_Bl_min**2 - x_F**2)
@@ -122,15 +85,13 @@ class ParkingController(Node):
                 y_F = self.b + self.d_side
                 d_offset = abs(y_F - y_F1)
                 
-                # lateral displacement per shunt move (adjusted for safety offset limits)
-                l_stroke = max(0.01, l - 2 * self.offset_limit)
-                delta_y = 2 * (RE_min - math.sqrt(max(0, RE_min**2 - (l_stroke/2.0)**2)))
+                # Lateral displacement per shunt move
+                delta_y = 2 * (RE_min - math.sqrt(max(0, RE_min**2 - (l/2.0)**2)))
                 
-                # total loops needed (each loop is 1 forward + 1 backward = 2 strokes)
-                # lateral displacement per loop is 2.0 * delta_y
-                self.total_trials = int(math.ceil(d_offset / (2.0 * delta_y))) + 2
+                # Total trials  
+                self.total_trials = int(d_offset / delta_y) + 2
                 
-                # update the target park position to the nearest parallel position
+                # Update the target park position to the nearest parallel position
                 offset_y = -d_offset if is_left_parking else d_offset
                 self.center_target_pose = (target[0], target[1] + offset_y, target[2])
                 
@@ -138,30 +99,33 @@ class ParkingController(Node):
                     self.get_logger().info(f"New target: {self.center_target_pose[0]:.2f}, {self.center_target_pose[1]:.2f}, {math.degrees(self.center_target_pose[2]):.2f} deg")
                     self.get_logger().info(f"Number of trials: {self.total_trials}. Lat offset: {d_offset:.2f}")
                 
-                # re-fetch new rear axle target using the new updated center_target_pose
+                # Re-fetch new rear axle target using the new updated center_target_pose
                 x_t, y_t, yaw_t = self.get_rear_axle(*self.center_target_pose)
 
         if is_left_parking:
             C_t_x = x_t + RE_min * math.cos(yaw_t - math.pi / 2)
             C_t_y = y_t + RE_min * math.sin(yaw_t - math.pi / 2)
+            
             dx = C_t_x - x_s
             dy = C_t_y - y_s
             d_C_Einit = math.sqrt(dx**2 + dy**2)
+
             dir_x = math.cos(yaw_s + math.pi / 2)
             dir_y = math.sin(yaw_s + math.pi / 2)
-        
         else:
             C_t_x = x_t + RE_min * math.cos(yaw_t + math.pi / 2)
             C_t_y = y_t + RE_min * math.sin(yaw_t + math.pi / 2)
+            
             dx = C_t_x - x_s
             dy = C_t_y - y_s
             d_C_Einit = math.sqrt(dx**2 + dy**2)
+            
             dir_x = math.cos(yaw_s - math.pi / 2)
             dir_y = math.sin(yaw_s - math.pi / 2)
 
         cos_alpha = (dx * dir_x + dy * dir_y) / d_C_Einit
         
-        # feasibility 
+        # Admissible Circle / Feasibility 
         d_EC_lmin = RE_min * cos_alpha + math.sqrt((RE_min * cos_alpha)**2 + RE_min**2 + 2 * RE_min**2)
         if d_C_Einit < 1.05*d_EC_lmin:
             if not silent:
@@ -170,6 +134,7 @@ class ParkingController(Node):
 
         num = d_C_Einit**2 - RE_min**2
         den = 2 * RE_min + 2 * d_C_Einit * cos_alpha
+        
         if den == 0: return None
         RE_init = num / den
 
@@ -178,16 +143,15 @@ class ParkingController(Node):
                 self.get_logger().warn(f"RE_init: {RE_init} < RE_min: {RE_min}")
             return None
 
-        # center of parking first arc
+        # Center of parking first arc
         C_i_x = x_s + RE_init * dir_x
         C_i_y = y_s + RE_init * dir_y
         
-        # tangency point T_e (between C_i and C_t)
+        # Tangency point T_e (between C_i and C_t)
         d_Ci_Ct = RE_init + RE_min
         T_e_x = C_i_x + (RE_init / d_Ci_Ct) * (C_t_x - C_i_x)
         T_e_y = C_i_y + (RE_init / d_Ci_Ct) * (C_t_y - C_i_y)
 
-        # first steer
         delta_init = math.atan(self.a / RE_init)
         
         if is_left_parking:
@@ -198,21 +162,18 @@ class ParkingController(Node):
             second_steer = -self.delta_max
             
         return {
-            'T_e': (T_e_x, T_e_y),          # tangent point between the two arcs
-            'first_steer': first_steer,     # initial steering for first arc
-            'second_steer': second_steer,   # steering for second arc
-            'is_left': is_left_parking,     # parking side
-            'C_i': (C_i_x, C_i_y)           # center of the first arc
+            'T_e': (T_e_x, T_e_y),          # Tangent point between the two arcs
+            'first_steer': first_steer,     # Initial steering for first arc
+            'second_steer': second_steer,   # Steering for second arc
+            'is_left': is_left_parking,     # Parking direction
+            'C_i': (C_i_x, C_i_y)           # Center of the first arc
         }
-
 
     def odom_callback(self, msg: Odometry):
         q = msg.pose.pose.orientation
         x_c = msg.pose.pose.position.x
         y_c = msg.pose.pose.position.y
         _, _, yaw_e = euler_from_quaternion([q.x, q.y, q.z, q.w])
-        linear_vel = msg.twist.twist.linear
-        speed = math.hypot(linear_vel.x, linear_vel.y)
 
         if not self.init_pose_captured:
             self.center_start_pose = (x_c, y_c, yaw_e)
@@ -223,7 +184,7 @@ class ParkingController(Node):
             )
 
         x_e, y_e, yaw_e = self.get_rear_axle(x_c, y_c, yaw_e)
-    
+        
         control = CarlaEgoVehicleControl()
         control.reverse = True
         
@@ -233,13 +194,14 @@ class ParkingController(Node):
                 self.current_state = 'FORWARD_ADJUST'
             else:
                 self.current_state = 'WAIT_STEERING'
+                self.start_time = self.get_clock().now()
                 
         elif self.current_state == 'FORWARD_ADJUST':
             control.steer = 0.0
             control.throttle = 0.3
             control.reverse = False
             
-            # check if feasible path exists while moving forward
+            # Check if feasible path exists while moving forward
             plan = self.calculate_path((x_c, y_c, yaw_e), self.center_target_pose, silent=True)
             if plan is not None:
                 control.throttle = 0.0
@@ -249,11 +211,14 @@ class ParkingController(Node):
         elif self.current_state == 'WAIT_FOR_STOP':
             control.throttle = 0.0
             control.brake = 1.0
+            linear_velocity = msg.twist.twist.linear
+            speed = math.hypot(linear_velocity.x, linear_velocity.y)
 
-            if speed < 0.001:
+            if speed < 0.01:
                 self.center_start_pose = (x_c, y_c, yaw_e) 
                 self.plan = self.calculate_path(self.center_start_pose, self.center_target_pose, silent=False)
                 self.current_state = 'WAIT_STEERING'
+                self.start_time = self.get_clock().now()
                 self.get_logger().info(f"Initial pose for planning: X={x_c:.2f}, Y={y_c:.2f}")
 
         elif self.current_state == 'WAIT_STEERING':
@@ -262,7 +227,8 @@ class ParkingController(Node):
             control.throttle = 0.0
             control.brake = 1.0
             
-            if speed < 0.001:
+            elapsed = (self.get_clock().now() - self.start_time).nanoseconds / 1e9
+            if elapsed > 1.5:
                 self.current_state = 'FIRST_ARC'
                 self.get_logger().info('Begin FIRST_ARC')
                 
@@ -271,19 +237,21 @@ class ParkingController(Node):
             control.steer = self.plan['first_steer']
             control.throttle = 0.3
             
-            # check if reached tangency point (T_e)
+            # Check if reached tangency point (T_e)
             T_e_x, T_e_y = self.plan['T_e']
             dist = math.sqrt((x_e - T_e_x)**2 + (y_e - T_e_y)**2)
 
-            # track minimum distance to T_e to detect when start moving away
+            # Track minimum distance to T_e to detect when start moving away
             if not hasattr(self, 'min_dist'):
                 self.min_dist = dist
             if dist < self.min_dist:
                 self.min_dist = dist
             
-            # transition if close, or pass the closest point and moving away.
+            # Transition if very close to T_e
+            # Transition if close, or if pass the closest point and moving away.
             if dist < 0.25 or (self.min_dist < 0.4 and dist > self.min_dist + 0.05):
                 self.current_state = 'WAIT_STEERING_2'
+                self.start_time = self.get_clock().now()
                 self.get_logger().info('Transitioning to WAIT_STEERING_2')
 
         elif self.current_state == 'WAIT_STEERING_2':
@@ -292,7 +260,8 @@ class ParkingController(Node):
             control.throttle = 0.0
             control.brake = 1.0
             
-            if speed < 0.001:
+            elapsed = (self.get_clock().now() - self.start_time).nanoseconds / 1e9
+            if elapsed > 1.5:
                 self.current_state = 'SECOND_ARC'
                 self.get_logger().info('Begin SECOND_ARC')
                 
@@ -301,7 +270,7 @@ class ParkingController(Node):
             control.steer = self.plan['second_steer']
             control.throttle = 0.3
             
-            # single trial stop condition 
+            # Single trial stop condition 
             yaw_diff = abs(yaw_e - self.center_target_pose[2])
             dist = math.sqrt((x_c - self.center_target_pose[0])**2 + (y_c - self.center_target_pose[1])**2)
             if yaw_diff < math.radians(1.5) and dist < 0.15:
@@ -316,11 +285,21 @@ class ParkingController(Node):
                 control.brake = 1.0
                 
                 if self.is_multiple_trials and self.trials_completed < self.total_trials:
+                    l = self.L - (self.a + self.d_front + self.d_rear)                                       # gap between car and obstacle when perfectly parked
+                    self.limit_front = self.center_target_pose[0] + l - 2*self.offset_limit                  # front limit (car's center X position)
+                    self.limit_rear  = self.center_target_pose[0]                                            # rear limit (car's center X position)
+                    
+                    # if x_c > self.center_target_pose[0]:
+                    #     self.current_state = 'SHUNT_BACKWARD_1'
+                    #     # self.shunt_mid_x = x_c + (self.limit_rear - x_c) * 0.4 
+                    #     self.shunt_mid_x = self.limit_rear + 0.45*l
+                    # else:
+                    #     self.current_state = 'SHUNT_FORWARD_1'
+                    #     # self.shunt_mid_x = x_c + (self.limit_front - x_c) * 0.4    
+                    #     self.shunt_mid_x = self.limit_rear + 0.45*l  
+
                     self.current_state = 'SHUNT_FORWARD_1'
-                    l = self.L - (self.a + self.d_front + self.d_rear)                            # gap between car and obstacle when perfectly parked
-                    self.limit_front = self.center_target_pose[0] + l - 2*self.offset_limit       # front limit (car's center X position)
-                    self.limit_rear  = self.center_target_pose[0]                                 # rear limit (car's center X position)
-                    self.shunt_mid_x = (x_c + self.limit_front) / 2.0                             # dynamic midpoint to ensure symmetric arcs
+                    self.shunt_mid_x = self.limit_rear + 0.5*(self.limit_front - self.limit_rear)          # Midpoint for shunt transition
                     self.trials_completed += 1
                     
                     self.get_logger().info(f"Start n trials: {self.trials_completed}/{self.total_trials}")
@@ -351,19 +330,21 @@ class ParkingController(Node):
             control.steer = self.delta_max if self.plan['is_left'] else -self.delta_max
             
             yaw_diff = abs(yaw_e - self.center_target_pose[2])
-            if x_c >= self.limit_front or (yaw_diff < math.radians(0.1) and x_c >= self.shunt_mid_x + 0.05): 
+            if x_c >= self.limit_front or (yaw_diff < math.radians(1.0) and x_c >= self.shunt_mid_x + 0.05): 
                 control.brake = 1.0
                 control.throttle = 0.0
                 control.steer = 0.0
+                self.start_time = self.get_clock().now()
                 self.current_state = 'WAIT_BEFORE_BACKWARD'
                 self.get_logger().info(f'Switching to back shunt, X={x_c:.2f}, Y={y_c:.2f}')
 
         elif self.current_state == 'WAIT_BEFORE_BACKWARD':
             control.brake = 1.0
             control.throttle = 0.0
-            if speed < 0.001:
+            elapsed = (self.get_clock().now() - self.start_time).nanoseconds / 1e9
+            if elapsed > 1.0:
                 self.current_state = 'SHUNT_BACKWARD_1'
-                self.shunt_mid_x = (x_c + self.limit_rear) / 2.0
+                # self.shunt_mid_x = x_c + (self.limit_rear - x_c) * 0.4
 
         elif self.current_state == 'SHUNT_BACKWARD_1':
             if not self.plan: return
@@ -384,7 +365,7 @@ class ParkingController(Node):
             control.steer = self.delta_max if self.plan['is_left'] else -self.delta_max
             
             yaw_diff = abs(yaw_e - self.center_target_pose[2])
-            if x_c <= self.limit_rear or (yaw_diff < math.radians(0.1) and x_c <= self.shunt_mid_x - 0.05):
+            if x_c <= self.limit_rear or (yaw_diff < math.radians(1.0) and x_c <= self.shunt_mid_x - 0.05):
                 control.brake = 1.0
                 control.throttle = 0.0
                 control.steer = 0.0
@@ -396,27 +377,22 @@ class ParkingController(Node):
                     self.get_logger().info('Multiple trials parking complete.')
                 else:
                     self.current_state = 'WAIT_BEFORE_FORWARD'
+                    self.start_time = self.get_clock().now()
                     self.get_logger().info(f"Shunt loop [{self.trials_completed}/{self.total_trials}] complete. Position: X={x_c:.2f}, Y={y_c:.2f}, Yaw={math.degrees(yaw_e):.2f} deg")
                     
         elif self.current_state == 'WAIT_BEFORE_FORWARD':
             control.brake = 1.0
             control.throttle = 0.0
-            if speed < 0.001:
+            elapsed = (self.get_clock().now() - self.start_time).nanoseconds / 1e9
+            if elapsed > 1.0:
                 self.current_state = 'SHUNT_FORWARD_1'
-                self.shunt_mid_x = (x_c + self.limit_front) / 2.0
+                # self.shunt_mid_x = x_c + (self.limit_front - x_c) * 0.4
 
         elif self.current_state == 'DONE':
             control.steer = 0.0
             control.throttle = 0.0
             control.brake = 1.0
-            if not self.plot_triggered:
-                self.trigger_plot()
-                self.plot_triggered = True
             
-        trial_msg = Int32()
-        trial_msg.data = self.trials_completed
-        self.trial_pub.publish(trial_msg)
-
         self.cmd_pub.publish(control)
 
 def main(args=None):

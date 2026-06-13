@@ -1,0 +1,16 @@
+{
+    "vehicle_model": "tesla.model3",
+    "dimensions": {
+        "overall_length_L_mm": 4792,
+        "overall_width_W_mm": 2163,
+        "wheelbase_a_mm": 3005,
+        "track_2b_mm": 1667,
+        "front_overhang_dfront_mm": 807,
+        "rear_overhang_drear_mm": 980,
+        "distance_wheel_to_side": {
+            "left_dl_mm": 248,
+            "right_dr_mm": 248
+        },
+        "max_steering_angle_deg": 35
+    }
+}

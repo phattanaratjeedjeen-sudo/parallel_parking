@@ -1,0 +1,16 @@
+{
+    "vehicle_model": "lincoln.mkz_2020",
+    "dimensions": {
+        "overall_length_L_mm": 4892,
+        "overall_width_W_mm": 1837,
+        "wheelbase_a_mm": 2860,
+        "track_2b_mm": 1593,
+        "front_overhang_dfront_mm": 968,
+        "rear_overhang_drear_mm": 1064,
+        "distance_wheel_to_side": {
+            "left_dl_mm": 122,
+            "right_dr_mm": 122
+        },
+        "max_steering_angle_deg": 35
+    }
+}
