@@ -3,4 +3,4 @@ install/
 log/
 
 src/carla_ros/
-src/lka_bringup/program_log/
+src/lka_bringup/data/results/clip/
