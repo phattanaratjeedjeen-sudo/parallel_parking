@@ -1,6 +1,7 @@
 # Geometry Base Path Planning for Parallel Parking
 
-<video src="./material/video/park_6.2_35.0_final_fast.webm" autoplay loop muted playsinline width="500"></video>
+[park_6.2_35.0_final_fast.webm](https://github.com/user-attachments/assets/9ad1b1fe-018f-4fb5-b3d0-b1a23579d13b)
+
 
 ## Table of Contents
 - [File Structure](#file-structure)
