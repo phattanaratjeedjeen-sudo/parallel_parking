@@ -249,6 +249,44 @@ ARC1_YAW_DEG and MAX_STEER_ANGLE_STATE2 can calculate from pathtest.py
  <p align="center">
  <img src="pic\New_Tesla_model3_x=15_yaw=47.png" width="700"> </p><br>
 
+**Max Steering 35°** <br>
+
+### Parking slot length: 7.2 m Gap between parked cars: 2.4 m Initial steering angle: 35° Reverse until the yaw angle reaches 35°
+<p align="center">
+<img src="Result\Steer35_x=17_yaw=35_steer=35.gif" width="400">
+ </p>
+ <p align="center">
+ <img src="pic\Steer35_x=17_yaw=35_steer=35.png" width="700"> </p><br>
+
+
+### Parking slot length: 6.7 m Gap between parked cars: 1.9 m Initial steering angle: 35° Reverse until the yaw angle reaches 35°
+<p align="center">
+<img src="Result\Steer35_x=16.5_yaw=35_steer=35.gif" width="400">
+ </p>
+ <p align="center">
+ <img src="pic\Steer35_x=16.5_yaw=35_steer=35.png" width="700"> </p><br>
+
+### Parking slot length: 6.2 m Gap between parked cars: 1.4 m Initial steering angle: 35° Reverse until the yaw angle reaches 32°
+<p align="center">
+<img src="Result\Steer35_x=16_yaw=32_steer=35.gif" width="400">
+ </p>
+ <p align="center">
+ <img src="pic\Steer35_x=16_yaw=32_steer=35.png" width="700"> </p><br>
+
+  ### Parking slot length: 5.7 m Gap between parked cars: 0.9 m Initial steering angle: 35° Reverse until the yaw angle reaches 30°
+<p align="center">
+<img src="Result\Steer35_x=15.5_yaw=30_steer=35.gif" width="400">
+ </p>
+ <p align="center">
+ <img src="pic\Steer35_x=15.5_yaw=30_steer=35.png" width="700"> </p><br>
+
+ ### Parking slot length: 5.2 m Gap between parked cars: 0.4 m Initial steering angle: 35° Reverse until the yaw angle reaches 30°
+<p align="center">
+<img src="Result\Steer35_x=15_yaw=30_steer=35.gif" width="400">
+ </p>
+ <p align="center">
+ <img src="pic\Steer35_x=15_yaw=30_steer=35.png" width="700"> </p><br>
+
  **Max Steering 30°** <br>
 
 ### Parking slot length: 7.2 m Gap between parked cars: 2.4 m Initial steering angle: 21° Reverse until the yaw angle reaches 33°
