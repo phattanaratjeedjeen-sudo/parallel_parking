@@ -64,7 +64,7 @@ To evaluate the efficiency and accuracy of each parking strategy, the system tra
     Evaluates the vehicle's final resting pose (X, Y, and Yaw) compared to the ideal target center of the parking spot to ensure safe alignment.
 
 ### Simulation Approach
-The algorithms are rigorously tested within the CARLA simulator integrated with ROS 2. The simulation method involves systematically varying key physical constraints—specifically the parking spot length ($L$) and the vehicle's maximum steering angle ($\delta_{max}$)—to observe how the planners adapt. Automated data logging records the vehicle's odometry, steering commands, and KPIs across these varying scenarios to evaluate the robustness, mathematical limits, and overall success rate of each parking method.
+The algorithms are rigorously tested within the CARLA simulator integrated with ROS 2. The simulation method involves systematically varying key physical constraints specifically the parking spot length ($L$) and the vehicle's maximum steering angle ($\delta_{max}$) to observe how the planners adapt. Automated data logging records the vehicle's odometry, steering commands, and KPIs across these varying scenarios to evaluate the robustness, mathematical limits, and overall success rate of each parking method.
 
 
 ## Use This Package
@@ -155,7 +155,9 @@ Below are the core vehicle(Tesla Model 3) parameters:
 
 Using these parameters, the system dynamically calculates essential pathing limits, such as the minimum turning radius of the rear axle ($R_{E, min}$) based on Ackermann steering geometry:  
 
-$$R_{E, min} = \frac{a}{\tan(\delta_{max})}$$
+$$
+R_{E, min} = \frac{a}{\tan(\delta_{max})}
+$$
 
 ## Core Strategy
 
