@@ -1,12 +1,15 @@
 # Geometry Base Path Planning for Parallel Parking
 
-[park_6.2_35.0_final_fast.webm](https://github.com/user-attachments/assets/9ad1b1fe-018f-4fb5-b3d0-b1a23579d13b)
+<figure align="center">
+  <video src="https://github.com/user-attachments/assets/9ad1b1fe-018f-4fb5-b3d0-b1a23579d13b" autoplay loop muted playsinline width="500"></video>
+  <figcaption><i>Simulation of the geometry-based parallel parking path.</i></figcaption>
+</figure>
 
 
 ## Table of Contents
-- [File Structure](#file-structure)
 - [Project Overview](#project-overview)
 - [Use This Package](#use-package)
+- [File Structure](#file-structure)
 - [Vehicle Model](#vehicle-model)
 - [Core Strategy](#core-strategy)
 - [Simulation Method](#simulation-method)
@@ -14,27 +17,6 @@
 - [Discussion](#discussion)
 - [Conclusion](#conclusion)
 - [Reference](#reference)
-
-
-## File Structure
-
-### Carla-Ros
-```text
-src/lka_bringup/
-├── config/
-│   └── objects.json                -> spawn configuration
-├── launch/
-│   ├── bring_up_carla.launch.py    -> manage carla-ros connection
-│   └── parking_control.launch.py   -> main launch file
-└── scripts/
-    ├── log_data.py                 -> logger output      
-    ├── park_planning.py            -> main script
-    ├── plot_results.py             -> plot indivedual result
-    └── update_spawn_config.py      -> change front obstrucle spawn point
-```
-
-### Pure Carla
-( add here )
 
 
 ## Project Overview
@@ -137,6 +119,25 @@ This package is devinded to 2 version
 #### Steps
 ( add here )
 
+## File Structure
+
+### Carla-Ros
+```text
+src/lka_bringup/
+├── config/
+│   └── objects.json                -> spawn configuration
+├── launch/
+│   ├── bring_up_carla.launch.py    -> manage carla-ros connection
+│   └── parking_control.launch.py   -> main launch file
+└── scripts/
+    ├── log_data.py                 -> logger output      
+    ├── park_planning.py            -> main script
+    ├── plot_results.py             -> plot indivedual result
+    └── update_spawn_config.py      -> change front obstrucle spawn point
+```
+
+### Pure Carla
+( add here )
 
 ## Vehicle Model
 This project utilizes a standard **kinematic bicycle model** to plan and evaluate parking trajectories. The model simplifies the vehicle's kinematics by representing the two front wheels as a single steerable front wheel, and the two rear wheels as a single fixed rear wheel. 
