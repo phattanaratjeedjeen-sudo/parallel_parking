@@ -50,14 +50,16 @@ class ParkingController(Node):
         super().__init__('parking_controller')
         
         # vehicle parameters
-        self.delta_max = math.radians(35.0)
+        self.declare_parameter('max_steer', 35.0)
+        self.delta_max = math.radians(self.get_parameter('max_steer').value)
         self.a = 3.005                  # from rear axle to front axle     
         self.rear_axle_offset = 1.42    # from origin backward
         self.b = 1.67 / 2.0             # half track
         self.d_front = 0.81             # front overhang
         self.d_rear = 0.98              # rear overhang
         self.d_side = 0.25              # side distance to mirror
-        self.L = 6.7                    # parking spot length 
+        self.declare_parameter('L', 6.7)
+        self.L = self.get_parameter('L').value
         
         self.center_target_pose = (69.9, -105.0, 0.0)   # target pose (car's center) (x, y, yaw)
         self.center_start_pose = None                   # initial pose (car's center) (x, y, yaw) 
@@ -66,8 +68,9 @@ class ParkingController(Node):
         self.plan = None
         self.is_multiple_trials = False
         self.current_state = 'EVALUATING'
-        self.trials_completed = 1
-        self.total_trials = 1                 
+        self.trials_completed = 0                       # for multi trials
+        self.total_trials = 1                           # for multi trials
+        self.change_gear_times = 0                      
         self.plot_triggered = False
 
         self.log_dir = os.path.expanduser('~/park_ws/src/lka_bringup/data/results/logger')
@@ -81,8 +84,8 @@ class ParkingController(Node):
             '/carla/ego_vehicle/vehicle_control_cmd', 
             10
         )
-        self.trial_pub = self.create_publisher(Int32, 
-            '/carla/ego_vehicle/trials', 
+        self.gear_pub = self.create_publisher(Int32, 
+            '/carla/ego_vehicle/gear_changes', 
             10
         )
         self.config_srv = self.create_service(
@@ -156,8 +159,8 @@ class ParkingController(Node):
         RE_min = self.a / math.tan(self.delta_max)
 
         # minimum parking spot
-        R_Bl_min = math.sqrt((RE_min + self.b + self.d_side)**2 + (self.a + self.d_front)**2)
-        L_min = self.d_rear + math.sqrt(R_Bl_min**2 - (RE_min - self.b - self.d_side)**2)
+        R_Bt_min = math.sqrt((RE_min + self.b + self.d_side)**2 + (self.a + self.d_front)**2)
+        L_min = self.d_rear + math.sqrt(R_Bt_min**2 - (RE_min - self.b - self.d_side)**2)
         
         if not silent:
             self.get_logger().info(f"Lmin: {L_min:.4f} m")
@@ -171,8 +174,8 @@ class ParkingController(Node):
                 l = self.L - (self.a + self.d_front + self.d_rear)
                 
                 x_F = self.L - self.d_rear
-                if R_Bl_min > x_F:
-                    y_F1 = RE_min - math.sqrt(R_Bl_min**2 - x_F**2)
+                if R_Bt_min > x_F:
+                    y_F1 = RE_min - math.sqrt(R_Bt_min**2 - x_F**2)
                 else:
                     y_F1 = RE_min
                 
@@ -185,7 +188,7 @@ class ParkingController(Node):
                 
                 # total loops needed (each loop is 1 forward + 1 backward = 2 strokes)
                 # lateral displacement per loop is 2.0 * delta_y
-                self.total_trials = int(math.ceil(d_offset / (2.0 * delta_y))) + 2
+                self.total_trials = math.floor(d_offset / (2.0 * delta_y) + 0.5)
                 
                 # update the target park position to the nearest parallel position
                 offset_y = -d_offset if is_left_parking else d_offset
@@ -203,7 +206,7 @@ class ParkingController(Node):
             C_t_y = y_t + RE_min * math.sin(yaw_t - math.pi / 2)
             dx = C_t_x - x_s
             dy = C_t_y - y_s
-            d_C_Einit = math.sqrt(dx**2 + dy**2)
+            d_Ct_Einit = math.sqrt(dx**2 + dy**2)
             dir_x = math.cos(yaw_s + math.pi / 2)
             dir_y = math.sin(yaw_s + math.pi / 2)
         
@@ -212,21 +215,21 @@ class ParkingController(Node):
             C_t_y = y_t + RE_min * math.sin(yaw_t + math.pi / 2)
             dx = C_t_x - x_s
             dy = C_t_y - y_s
-            d_C_Einit = math.sqrt(dx**2 + dy**2)
+            d_Ct_Einit = math.sqrt(dx**2 + dy**2)
             dir_x = math.cos(yaw_s - math.pi / 2)
             dir_y = math.sin(yaw_s - math.pi / 2)
 
-        cos_alpha = (dx * dir_x + dy * dir_y) / d_C_Einit
+        cos_alpha = (dx * dir_x + dy * dir_y) / d_Ct_Einit
         
         # feasibility 
-        d_EC_lmin = RE_min * cos_alpha + math.sqrt((RE_min * cos_alpha)**2 + RE_min**2 + 2 * RE_min**2)
-        if d_C_Einit < 1.05*d_EC_lmin:
+        d_Ct_Einit_min = RE_min * cos_alpha + math.sqrt((RE_min * cos_alpha)**2 + RE_min**2 + 2 * RE_min**2)
+        if d_Ct_Einit < 1.05*d_Ct_Einit_min:
             if not silent:
-                self.get_logger().warn(f"d_C_Einit: {d_C_Einit:.2f} < d_EC_lmin: {1.05*d_EC_lmin:.2f}, Move forward")
+                self.get_logger().warn(f"d_Ct_Einit: {d_Ct_Einit:.2f} < d_Ct_Einit_min: {1.05*d_Ct_Einit_min:.2f}, Move forward")
             return None
 
-        num = d_C_Einit**2 - RE_min**2
-        den = 2 * RE_min + 2 * d_C_Einit * cos_alpha
+        num = d_Ct_Einit**2 - RE_min**2
+        den = 2 * RE_min + 2 * d_Ct_Einit * cos_alpha
         if den == 0: return None
         RE_init = num / den
 
@@ -288,6 +291,7 @@ class ParkingController(Node):
             self.plan = self.calculate_path((x_c, y_c, yaw_e), self.center_target_pose, silent=False)
             if self.plan is None:
                 self.current_state = 'FORWARD_ADJUST'
+                self.change_gear_times += 1
             else:
                 self.current_state = 'WAIT_STEERING'
                 
@@ -321,6 +325,7 @@ class ParkingController(Node):
             
             if speed < 0.001:
                 self.current_state = 'FIRST_ARC'
+                self.change_gear_times += 1
                 self.get_logger().info('Begin FIRST_ARC')
                 
         elif self.current_state == 'FIRST_ARC':
@@ -374,13 +379,13 @@ class ParkingController(Node):
                 
                 if self.is_multiple_trials and self.trials_completed < self.total_trials:
                     self.current_state = 'SHUNT_FORWARD_1'
+                    self.change_gear_times += 1
                     l = self.L - (self.a + self.d_front + self.d_rear)                            # gap between car and obstacle when perfectly parked
                     self.limit_front = self.center_target_pose[0] + l - 2*self.offset_limit       # front limit (car's center X position)
                     self.limit_rear  = self.center_target_pose[0]                                 # rear limit (car's center X position)
                     self.shunt_mid_x = (x_c + self.limit_front) / 2.0                             # dynamic midpoint to ensure symmetric arcs
-                    self.trials_completed += 1
                     
-                    self.get_logger().info(f"Start n trials: {self.trials_completed}/{self.total_trials}")
+                    self.get_logger().info(f"Start n trials (not include single section): {self.trials_completed + 1}/{self.total_trials}")
                     self.get_logger().info(f"X Limits: Front={self.limit_front:.2f}, Rear={self.limit_rear:.2f}")
                     self.get_logger().info(f"Shunt mid X: {self.shunt_mid_x:.2f}")
                     self.get_logger().info(f"Target position:{self.center_target_pose[0]:.2f}, {self.center_target_pose[1]:.2f}")
@@ -420,6 +425,7 @@ class ParkingController(Node):
             control.throttle = 0.0
             if speed < 0.001:
                 self.current_state = 'SHUNT_BACKWARD_1'
+                self.change_gear_times += 1
                 self.shunt_mid_x = (x_c + self.limit_rear) / 2.0
 
         elif self.current_state == 'SHUNT_BACKWARD_1':
@@ -460,6 +466,7 @@ class ParkingController(Node):
             control.throttle = 0.0
             if speed < 0.001:
                 self.current_state = 'SHUNT_FORWARD_1'
+                self.change_gear_times += 1
                 self.shunt_mid_x = (x_c + self.limit_front) / 2.0
 
         elif self.current_state == 'DONE':
@@ -470,9 +477,9 @@ class ParkingController(Node):
                 self.trigger_plot()
                 self.plot_triggered = True
             
-        trial_msg = Int32()
-        trial_msg.data = self.trials_completed
-        self.trial_pub.publish(trial_msg)
+        gear_msg = Int32()
+        gear_msg.data = self.change_gear_times
+        self.gear_pub.publish(gear_msg)
 
         self.cmd_pub.publish(control)
 

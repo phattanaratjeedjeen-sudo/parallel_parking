@@ -3,6 +3,7 @@ import os
 import glob
 import pandas as pd
 import matplotlib.pyplot as plt
+from matplotlib.ticker import MaxNLocator
 import numpy as np
 import json
 
@@ -90,6 +91,13 @@ class PlotResultsNode(Node):
         ax.set_xlabel('X Position (m)')
         ax.set_ylabel('Y Position (m)')
         ax.set_title('Parking Trajectory')
+        
+        final_x = df['X Position (m)'].iloc[-1]
+        final_y = df['Y Position (m)'].iloc[-1]
+        ax.text(0.05, 0.85, f'Final: X={final_x:.2f}, Y={final_y:.2f}',
+                transform=ax.transAxes, fontsize=11, fontweight='bold',
+                bbox=dict(boxstyle='round,pad=0.3', facecolor='white', edgecolor='b', alpha=0.8))
+        
         ax.grid(True, alpha=0.3)
         ax.legend()
         ax.axis('equal')
@@ -137,17 +145,38 @@ class PlotResultsNode(Node):
         ax.grid(True, alpha=0.3)
         ax.legend()
         
-        # Plot 5: Trials vs Time
-        if 'trials (times)' in df.columns:
+        # Plot 5: Gear Changes vs Time
+        if 'change_gear_times' in df.columns:
             ax = axes[2, 0]
-            ax.plot(time, df['trials (times)'], 'm-', linewidth=2, drawstyle='steps-post', label='Trials')
+            gear_changes = df['change_gear_times']
+            ax.plot(time, gear_changes, 'm-', linewidth=2, drawstyle='steps-post', label='Gear Changes')
+            
+            total_gears = int(gear_changes.iloc[-1])
+            ax.text(0.05, 0.85, f'Total Gear Changes: {total_gears}',
+                    transform=ax.transAxes, fontsize=11, fontweight='bold',
+                    bbox=dict(boxstyle='round,pad=0.3', facecolor='white', edgecolor='m', alpha=0.8))
+            
             ax.set_xlabel('Time (s)')
-            ax.set_ylabel('Trial Number')
-            ax.set_title('Trials Completed Over Time')
+            ax.set_ylabel('Gear Changes')
+            ax.set_title('Numbers of Gear Changing')
+            ax.yaxis.set_major_locator(MaxNLocator(integer=True))
             ax.grid(True, alpha=0.3)
             ax.legend()
             
-        axes[2, 1].axis('off')  # Hide the empty 6th subplot
+        # Plot 6: Yaw Position vs Time
+        ax = axes[2, 1]
+        ax.plot(time, df['Yaw (deg)'], 'c-', linewidth=2, label='Yaw')
+        
+        final_yaw = df['Yaw (deg)'].iloc[-1]
+        ax.text(0.05, 0.85, f'Final Yaw: {final_yaw:.2f}°',
+                transform=ax.transAxes, fontsize=11, fontweight='bold',
+                bbox=dict(boxstyle='round,pad=0.3', facecolor='white', edgecolor='c', alpha=0.8))
+        
+        ax.set_xlabel('Time (s)')
+        ax.set_ylabel('Yaw (deg)')
+        ax.set_title('Yaw Over Time')
+        ax.grid(True, alpha=0.3)
+        ax.legend()
         
         plt.tight_layout()
         

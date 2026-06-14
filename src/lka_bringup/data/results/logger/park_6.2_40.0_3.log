@@ -1,0 +1,30 @@
+[2026-06-14 15:14:21.548] [INFO] Initial pose: X=71.00, Y=-107.50, Yaw=0.00 deg
+[2026-06-14 15:14:21.549] [INFO] Lmin: 6.4660 m
+[2026-06-14 15:14:21.549] [INFO] L < L_min, implement n trials
+[2026-06-14 15:14:21.549] [INFO] New target: 69.90, -105.52, 0.00 deg
+[2026-06-14 15:14:21.549] [INFO] Number of trials: 3. Lat offset: 0.52
+[2026-06-14 15:14:21.550] [WARN] d_C_Einit: 1.94 < d_EC_lmin: 4.11, Move forward
+[2026-06-14 15:14:24.856] [INFO] Lmin: 6.4660 m
+[2026-06-14 15:14:24.856] [INFO] Initial pose for planning: X=75.77, Y=-107.50
+[2026-06-14 15:14:24.911] [INFO] Begin FIRST_ARC
+[2026-06-14 15:14:31.419] [INFO] Transitioning to WAIT_STEERING_2
+[2026-06-14 15:14:31.629] [INFO] Begin SECOND_ARC
+[2026-06-14 15:14:35.726] [INFO] Single trial: complete, x_c: 70.11, y_c: -105.51, yaw_e: -0.84 deg
+[2026-06-14 15:14:35.727] [INFO] Start n trials (not include single section): 1/3
+[2026-06-14 15:14:35.727] [INFO] X Limits: Front=71.11, Rear=69.90
+[2026-06-14 15:14:35.727] [INFO] Shunt mid X: 70.61
+[2026-06-14 15:14:35.727] [INFO] Target position:69.90, -105.52
+[2026-06-14 15:14:36.695] [INFO] Switching to SHUNT_FORWARD_2
+[2026-06-14 15:14:37.351] [INFO] Switching to back shunt, X=71.13, Y=-105.23
+[2026-06-14 15:14:41.178] [INFO] Switching to SHUNT_BACKWARD_2
+[2026-06-14 15:14:42.813] [INFO] Shunt loop [1/3] complete. Position: X=70.04, Y=-105.35, Yaw=-0.03 deg
+[2026-06-14 15:14:45.283] [INFO] Switching to SHUNT_FORWARD_2
+[2026-06-14 15:14:46.382] [INFO] Switching to back shunt, X=71.11, Y=-105.07
+[2026-06-14 15:14:50.530] [INFO] Switching to SHUNT_BACKWARD_2
+[2026-06-14 15:14:52.196] [INFO] Shunt loop [2/3] complete. Position: X=70.03, Y=-105.18, Yaw=-0.01 deg
+[2026-06-14 15:14:54.838] [INFO] Switching to SHUNT_FORWARD_2
+[2026-06-14 15:14:56.171] [INFO] Switching to back shunt, X=71.13, Y=-104.91
+[2026-06-14 15:15:00.338] [INFO] Switching to SHUNT_BACKWARD_2
+[2026-06-14 15:15:01.997] [INFO] Final position: X=70.02, Y=-105.01
+[2026-06-14 15:15:01.997] [INFO] Multiple trials parking complete.
+[2026-06-14 15:15:02.052] [INFO] Plot response: Plot generation started.

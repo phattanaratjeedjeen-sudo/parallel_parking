@@ -1,6 +1,5 @@
-{   
-    "objects": 
-    [
+{
+    "objects": [
         {
             "type": "sensor.pseudo.traffic_lights",
             "id": "traffic_lights"
@@ -21,25 +20,53 @@
             "type": "sensor.pseudo.opendrive_map",
             "id": "map"
         },
-                {
+        {
             "type": "vehicle.tesla.model3",
             "id": "obstacle_front",
-            "spawn_point": {"x": 76.5, "y": -105.0, "z": 0.2, "roll": 0.0, "pitch": 0.0, "yaw": 0.0}
+            "spawn_point": {
+                "x": 75.0,
+                "y": -105.0,
+                "z": 0.2,
+                "roll": 0.0,
+                "pitch": 0.0,
+                "yaw": 0.0
+            }
         },
         {
             "type": "vehicle.tesla.model3",
             "id": "obstacle_rear",
-            "spawn_point": {"x": 65.0, "y": -105.0, "z": 0.2, "roll": 0.0, "pitch": 0.0, "yaw": 0.0}
+            "spawn_point": {
+                "x": 65.0,
+                "y": -105.0,
+                "z": 0.2,
+                "roll": 0.0,
+                "pitch": 0.0,
+                "yaw": 0.0
+            }
         },
         {
             "type": "vehicle.tesla.model3",
             "id": "ego_vehicle",
-            "spawn_point": {"x": 71.0, "y": -107.5, "z": 0.2, "roll": 0.0, "pitch": 0.0, "yaw": 0.0},
+            "spawn_point": {
+                "x": 71.0,
+                "y": -107.5,
+                "z": 0.2,
+                "roll": 0.0,
+                "pitch": 0.0,
+                "yaw": 0.0
+            },
             "sensors": [
                 {
                     "type": "sensor.camera.rgb",
                     "id": "CAM_FRONT",
-                    "spawn_point": {"x": 0.800, "y": 0.0, "z": 1.6, "roll": 0.0, "pitch": 0.0, "yaw": 0.0},
+                    "spawn_point": {
+                        "x": 0.8,
+                        "y": 0.0,
+                        "z": 1.6,
+                        "roll": 0.0,
+                        "pitch": 0.0,
+                        "yaw": 0.0
+                    },
                     "image_size_x": 1600,
                     "image_size_y": 900,
                     "fov": 70.0
@@ -47,12 +74,18 @@
                 {
                     "type": "sensor.camera.rgb",
                     "id": "CAM_VIEW",
-                    "spawn_point": {"x": -4.5, "y": 0.0, "z": 2.8, "roll": 0.0, "pitch": 20.0, "yaw": 0.0},
+                    "spawn_point": {
+                        "x": -4.5,
+                        "y": 0.0,
+                        "z": 2.8,
+                        "roll": 0.0,
+                        "pitch": 20.0,
+                        "yaw": 0.0
+                    },
                     "image_size_x": 800,
                     "image_size_y": 600,
                     "fov": 90.0,
-                    "attached_objects":
-                    [
+                    "attached_objects": [
                         {
                             "type": "actor.pseudo.control",
                             "id": "control"
@@ -62,7 +95,14 @@
                 {
                     "type": "sensor.camera.semantic_segmentation",
                     "id": "semantic_segmentation_front",
-                    "spawn_point": {"x": 0.800, "y": 0.0, "z": 1.6, "roll": 0.0, "pitch": 0.0, "yaw": 0.0},
+                    "spawn_point": {
+                        "x": 0.8,
+                        "y": 0.0,
+                        "z": 1.6,
+                        "roll": 0.0,
+                        "pitch": 0.0,
+                        "yaw": 0.0
+                    },
                     "fov": 70.0,
                     "image_size_x": 1600,
                     "image_size_y": 900
@@ -70,12 +110,20 @@
                 {
                     "type": "sensor.other.collision",
                     "id": "collision",
-                    "spawn_point": {"x": 0.0, "y": 0.0, "z": 0.0}
+                    "spawn_point": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    }
                 },
                 {
                     "type": "sensor.other.lane_invasion",
                     "id": "lane_invasion",
-                    "spawn_point": {"x": 0.0, "y": 0.0, "z": 0.0}
+                    "spawn_point": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    }
                 },
                 {
                     "type": "sensor.pseudo.objects",

@@ -18,7 +18,7 @@ class ResultRecorder(Node):
         
         self.L = None
         self.max_steer = None
-        self.current_trials = 1
+        self.current_gear_changes = 0
 
         self.data_dir = os.path.expanduser('~/park_ws/src/lka_bringup/data/results/csv')
         os.makedirs(self.data_dir, exist_ok=True)
@@ -42,10 +42,10 @@ class ResultRecorder(Node):
             10
         )
 
-        self.trial_sub = self.create_subscription(
+        self.gear_sub = self.create_subscription(
             Int32,
-            '/carla/ego_vehicle/trials',
-            self.trial_callback,
+            '/carla/ego_vehicle/gear_changes',
+            self.gear_callback,
             10
         )
         
@@ -55,8 +55,8 @@ class ResultRecorder(Node):
         )
         self.timer = self.create_timer(1.0, self.request_config)
 
-    def trial_callback(self, msg: Int32):
-        self.current_trials = msg.data
+    def gear_callback(self, msg: Int32):
+        self.current_gear_changes = msg.data
         
     def request_config(self):
         if self.csv_file is not None:
@@ -102,7 +102,7 @@ class ResultRecorder(Node):
             'Y Position (m)',
             'Yaw (rad)',
             'Steering Command',
-            'trials (times)'
+            'change_gear_times'
         ])
         self.csv_file_handle.flush()
         self.get_logger().info(f'CSV file initialized at {self.csv_file}')
@@ -138,7 +138,7 @@ class ResultRecorder(Node):
             f'{y:.6f}',
             f'{yaw:.6f}',
             f'{steer:.6f}',
-            f'{self.current_trials}'
+            f'{self.current_gear_changes}'
         ])
         self.csv_file_handle.flush()
         
