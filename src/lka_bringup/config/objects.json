@@ -24,7 +24,7 @@
             "type": "vehicle.tesla.model3",
             "id": "obstacle_front",
             "spawn_point": {
-                "x": 75.0,
+                "x": 76.0,
                 "y": -105.0,
                 "z": 0.2,
                 "roll": 0.0,

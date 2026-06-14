@@ -1,5 +1,7 @@
 # Geometry Base Path Planning for Parallel Parking
 
+<video src="./material/video/park_6.2_35.0_final_fast.webm" autoplay loop muted playsinline width="500"></video>
+
 ## Table of Contents
 - [File Structure](#file-structure)
 - [Project Overview](#project-overview)
@@ -102,6 +104,9 @@ This package is devinded to 2 version
     ```bash
     # set park length to 6.2m
     python3 ~/park_ws/src/lka_bringup/scripts/update_spawn_config.py 6.2
+
+    # build and source everytimes when change park lenth
+    colcon build --packages-select lka_bringup && source install/setup.bash
     ```
 
 4. Launch
@@ -167,7 +172,7 @@ $$
 This maneuver is triggered when the parking space is large enough ($L \ge L_{min}$) to allow continuous reverse entry using two circular arcs. Let the starting rear axle pose be $(x_s, y_s, \psi_s)$ and the target rear axle pose be $(x_t, y_t, \psi_t)$.
 
 <p align="center">
-  <img src="./material/images/single.png" width="50%"/>
+  <img src="./material/images/single.png" width="80%"/>
 </p>
 
 **Minimum Spot Length Calculation**
@@ -291,13 +296,19 @@ $$
 
 | Notation | Description | unit |
 | :--- | :--- | :--- |
-| $L_{car}$        | Total length of the vehicle                                      |
-| $L$              | Length of the parking spot                                       |
-| $d_{offset}$     | Total lateral distance needed to shift into the parking spot     |
-| $l_{stroke}$     | Available longitudinal clearance for each shunting stroke        |
-| $offset_{limit}$ | Minimum safety clearance maintained from obstacles during shunts |
-| $\Delta y$       | Lateral displacement gained per single longitudinal stroke       |
-| $N_{trials}$     | Total number of required shunting loops (1 forward + 1 backward) |
+| $L_{car}$        | Total length of the vehicle                                      | m |  
+| $L$              | Length of the parking spot                                       | m |
+| $d_{offset}$     | Total lateral distance needed to shift into the parking spot     | m |
+| $l_{stroke}$     | Available longitudinal clearance for each shunting stroke        | m |
+| $offset_{limit}$ | Minimum safety clearance maintained from obstacles during shunts | m |
+| $\Delta y$       | Lateral displacement gained per single longitudinal stroke       | m |
+| $N_{trials}$     | Total number of required shunting loops (1 forward + 1 backward) | times |
+
+Below is how `single` and `crab-like` method works togather to achieve parking in tiny spots.
+
+<p align="center">
+  <img src="./material/images/crab_flowchart.png" width="80%"/>
+</p>
 
 ### Human-Like Parking
     ( add here )

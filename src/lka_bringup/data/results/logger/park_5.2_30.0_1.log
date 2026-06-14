@@ -1,23 +1,19 @@
-[2026-06-14 15:26:45.595] [INFO] Initial pose: X=71.00, Y=-107.50, Yaw=0.00 deg
-[2026-06-14 15:26:45.595] [INFO] Lmin: 7.0745 m
-[2026-06-14 15:26:45.595] [INFO] L < L_min, implement n trials
-[2026-06-14 15:26:45.595] [INFO] New target: 69.90, -106.91, 0.00 deg
-[2026-06-14 15:26:45.596] [INFO] Number of trials: 472. Lat offset: 1.91
-[2026-06-14 15:26:45.596] [WARN] d_C_Einit: 4.74 < d_EC_lmin: 5.54, Move forward
-[2026-06-14 15:26:48.816] [INFO] Lmin: 7.0745 m
-[2026-06-14 15:26:48.816] [INFO] Initial pose for planning: X=74.77, Y=-107.50
-[2026-06-14 15:26:48.871] [INFO] Begin FIRST_ARC
-[2026-06-14 15:26:55.233] [INFO] Transitioning to WAIT_STEERING_2
-[2026-06-14 15:26:55.444] [INFO] Begin SECOND_ARC
-[2026-06-14 15:26:57.940] [INFO] Single trial: complete, x_c: 70.12, y_c: -106.91, yaw_e: -1.14 deg
-[2026-06-14 15:26:57.940] [INFO] Start n trials (not include single section): 1/472
-[2026-06-14 15:26:57.940] [INFO] X Limits: Front=70.11, Rear=69.90
-[2026-06-14 15:26:57.940] [INFO] Shunt mid X: 70.11
-[2026-06-14 15:26:57.940] [INFO] Target position:69.90, -106.91
-[2026-06-14 15:26:58.217] [INFO] Switching to SHUNT_FORWARD_2
-[2026-06-14 15:26:58.273] [INFO] Switching to back shunt, X=70.15, Y=-106.89
-[2026-06-14 15:27:01.712] [INFO] Switching to SHUNT_BACKWARD_2
-[2026-06-14 15:27:04.296] [INFO] Shunt loop [1/472] complete. Position: X=69.90, Y=-106.88, Yaw=-0.04 deg
-[2026-06-14 15:27:05.434] [INFO] Switching to SHUNT_FORWARD_2
-[2026-06-14 15:27:05.804] [INFO] Switching to back shunt, X=70.11, Y=-106.83
-[2026-06-14 15:27:08.557] [INFO] Switching to SHUNT_BACKWARD_2
+[2026-06-14 15:27:55.876] [INFO] Initial pose: X=71.00, Y=-107.50, Yaw=0.00 deg
+[2026-06-14 15:27:55.876] [INFO] Lmin: 7.0745 m
+[2026-06-14 15:27:55.877] [INFO] L < L_min, implement n trials
+[2026-06-14 15:27:55.877] [INFO] New target: 69.90, -106.91, 0.00 deg
+[2026-06-14 15:27:55.877] [INFO] Number of trials: 472. Lat offset: 1.91
+[2026-06-14 15:27:55.877] [WARN] d_C_Einit: 4.74 < d_EC_lmin: 5.54, Move forward
+[2026-06-14 15:27:59.221] [INFO] Lmin: 7.0745 m
+[2026-06-14 15:27:59.221] [INFO] Initial pose for planning: X=74.76, Y=-107.50
+[2026-06-14 15:27:59.289] [INFO] Begin FIRST_ARC
+[2026-06-14 15:28:05.922] [INFO] Transitioning to WAIT_STEERING_2
+[2026-06-14 15:28:06.163] [INFO] Begin SECOND_ARC
+[2026-06-14 15:28:08.679] [INFO] Single trial: complete, x_c: 70.12, y_c: -106.90, yaw_e: -1.50 deg
+[2026-06-14 15:28:08.679] [INFO] Start n trials (not include single section): 1/472
+[2026-06-14 15:28:08.680] [INFO] X Limits: Front=70.11, Rear=69.90
+[2026-06-14 15:28:08.680] [INFO] Shunt mid X: 70.11
+[2026-06-14 15:28:08.680] [INFO] Target position:69.90, -106.91
+[2026-06-14 15:28:08.943] [INFO] Switching to SHUNT_FORWARD_2
+[2026-06-14 15:28:08.995] [INFO] Switching to back shunt, X=70.16, Y=-106.88
+[2026-06-14 15:28:12.492] [INFO] Switching to SHUNT_BACKWARD_2
