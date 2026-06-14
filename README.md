@@ -137,7 +137,9 @@ This project utilizes a standard **kinematic bicycle model** to plan and evaluat
 
 To guarantee collision-free maneuvers, path planning is calculated using the center of the rear axle as the primary reference frame. The vehicle's footprint is expanded using dimensions like overhangs and mirror offsets to ensure the bounding box does not intersect with obstacles.
 
-![vehecle parameters](/material/images/vihecle_parm.png)
+<p align="center">
+  <img src="./material/images/vihecle_parm.png" width="50%"/>
+</p>
 
 ### Vehicle Parameters
 Below are the core vehicle(Tesla Model 3) parameters:
@@ -164,9 +166,11 @@ $$
 ### Single Trial
 This maneuver is triggered when the parking space is large enough ($L \ge L_{min}$) to allow continuous reverse entry using two circular arcs. Let the starting rear axle pose be $(x_s, y_s, \psi_s)$ and the target rear axle pose be $(x_t, y_t, \psi_t)$.
 
-![single trial](/material/images/single.png)
+<p align="center">
+  <img src="./material/images/single.png" width="50%"/>
+</p>
 
-1. **Minimum Spot Length Calculation**
+**Minimum Spot Length Calculation**
 
 The minimum required parking length $L_{min}$ to park without shunting is determined by the vehicle's turning radius and spatial footprint:
 
@@ -178,8 +182,8 @@ $$
 L_{min} = d_{rear} + \sqrt{R_{Bt, min}^2 - (R_{E, min} - b - d_{side})^2}
 $$
 
-2. **Target Turning Center ($C_t$)**
-    
+**Target Turning Center ($C_t$)**
+
 The final arc always uses the minimum turning radius ($R_{E, min}$). For a right-side parking maneuver, its center $C_t$ is:
 
 $$
@@ -190,8 +194,8 @@ $$
 C_{t,y} = y_t + R_{E,min} \sin\left(\psi_t + \frac{\pi}{2}\right)
 $$
 
-3. **Feasibility Check (Condition to Begin)**
-    
+**Feasibility Check (Condition to Begin)**
+
 The distance from the start position to the target turning center $d_{Ct,Einit} = \sqrt{(C_{t,x} - x_s)^2 + (C_{t,y} - y_s)^2}$ must satisfy a minimum geometric bound. Where $\alpha$ is the angle between the starting lateral vector and the vector to $C_t$:
     
 $$
@@ -200,8 +204,8 @@ $$
 
 If $d_{Ct,Einit} < 1.05 \cdot d_{Ct,Einit,min}$ (for safety) the path is unfeasible, and the vehicle must adjust forward to create more space.
 
-4. **First Arc Radius and Steering Angle**
-    
+**First Arc Radius and Steering Angle** 
+
 If feasible, the turning radius for the first arc ($R_{E,init}$) is calculated to ensure the two circles perfectly touch:
 
 $$
@@ -214,19 +218,24 @@ $$
 \delta_{init} = \arctan\left(\frac{a}{R_{E,init}}\right)
 $$
 
-5. **Initial Turning Center ($C_i$) & Tangent Point ($T_e$)**
+**Initial Turning Center ($C_i$) & Tangent Point ($T_e$)**
+
 The center for the first arc ($C_i$) is located at distance $R_{E,init}$ perpendicular to the starting orientation:
+
 $$
 C_{i,x} = x_s + R_{E,init} \cos\left(\psi_s - \frac{\pi}{2}\right)
 $$
+
 $$
 C_{i,y} = y_s + R_{E,init} \sin\left(\psi_s - \frac{\pi}{2}\right)
 $$
     
 The transition tangent point ($T_e$) is where the vehicle switches steering. It lies on the line segment connecting $C_i$ and $C_t$, weighted by their radii:
+
 $$
 T_{e,x} = C_{i,x} + \frac{R_{E,init}}{R_{E,init} + R_{E,min}} (C_{t,x} - C_{i,x})
 $$
+
 $$
 T_{e,y} = C_{i,y} + \frac{R_{E,init}}{R_{E,init} + R_{E,min}} (C_{t,y} - C_{i,y})
 $$
@@ -250,24 +259,32 @@ $$
 ### Crab-Like Parking
 When the parking spot is too tight for a single maneuver ($L_{car} < L < L_{min}$), the system employs a shunting strategy modeled after crab-walking. 
 
-![multi trial](/material/images/multi.png)
+<p align="center">
+  <img src="./material/images/multi.png" width="50%"/>
+</p>
 
-1. **Lateral Offset**
+**Lateral Offset**
+
 The algorithm calculates the maximum depth the vehicle *can* safely reach in a single initial reverse trial. It sets a temporary parallel target pose outside the spot by a lateral distance of $d_{offset}$.
 
-2. **Shunting Loops**
+**Shunting Loops**
+
 Once aligned at this offset, the vehicle shifts laterally into the spot by performing $N$ forward-backward loops. During each longitudinal stroke, the steering smoothly alternates between maximum left and right angles ($\pm\delta_{max}$) to maximize lateral movement.
 
-3. **Displacement Math**
+**Displacement Math**
+
 The lateral displacement per stroke ($\Delta y$) relies on the available longitudinal clearance ($l_{stroke}$):
+
 $$
 l_{stroke} = (L - L_{car}) - 2 \cdot offset_{limit}
 $$
+
 $$
 \Delta y = 2 \cdot \left( R_{E,min} - \sqrt{ \max\left(0, R_{E,min}^2 - \left(\frac{l_{stroke}}{2}\right)^2\right) } \right)
 $$
    
 The required number of total shunting loops ($N_{trials}$) is computed dynamically to cover the total $d_{offset}$:
+
 $$
 N_{trials} = \left\lfloor \frac{d_{offset}}{2 \cdot \Delta y} + 0.5 \right\rfloor
 $$
@@ -301,7 +318,10 @@ While vary these parameters. Drived car's spawn point, obstrucles size, park off
 | $x_s, y_s$ (m)      | spawn position                       |             | fix  |
 | $x_f, y_f$ (m)      | target position                      |             | fix  |
 
-![start and desired condition](/material/images/sim_con.png)
+<p align="center">
+  <img src="./material/images/sim_con.png" width="80%"/>
+</p>
+
 Log parameters
 
 | Notation(unit) | Description | 
