@@ -1,4 +1,4 @@
-# Geometry Base Path Planning for Parallel Parking
+# Geometry-Based Path Planning for Parallel Parking
 
 <figure align="center">
   <video src="https://github.com/user-attachments/assets/9ad1b1fe-018f-4fb5-b3d0-b1a23579d13b" autoplay loop muted playsinline width="500"></video>
@@ -43,21 +43,21 @@ This project focuses on the core kinematics of parallel parking between two long
 To evaluate the efficiency and accuracy of each parking strategy, the system tracks specific KPIs during simulation:
 
 - **Number of Gear Changes**
-    Measures the maneuver's efficiency. Fewer gear changes more optimal path.
+    Measures the maneuver's efficiency. Fewer gear changes indicate a smoother, more optimal path.
 
 - **Final Lateral Position**
     Evaluates the vehicle's final resting lateral (Y) compared to the ideal target center of the parking spot to ensure safe alignment.
 
 ### Simulation Approach
-The algorithms are rigorously tested within the CARLA simulator integrated with ROS 2. The simulation method involves systematically varying key physical constraints specifically the parking spot length ($L$) and the vehicle's maximum steering angle ($\delta_{max}$) to observe how the planners adapt. Automated data logging records the vehicle's odometry, steering commands, and KPIs across these varying scenarios to evaluate the robustness, mathematical limits, and overall success rate of each parking method.
+The algorithms are rigorously tested within the CARLA simulator integrated with ROS 2. The simulation method involves systematically varying key physical constraints—specifically the parking spot length ($L$) and the vehicle's maximum steering angle ($\delta_{max}$)—to observe how the planners adapt. Automated data logging records the vehicle's odometry, steering commands, and KPIs across these varying scenarios to evaluate the robustness, mathematical limits, and overall success rate of each parking method.
 
 
 ## Use This Package
-This package is devinded to 2 version 
-- Carla-ROS: implement single trial and crab-like parking method 
-- Pure Carla: implement human-like parking method in [here](https://github.com/phattanaratjeedjeen-sudo/parallel_parking/tree/Human)
+This package is divided into 2 versions:
+- Carla-ROS: implements the single-trial and crab-like parking methods
+- Pure Carla: implements the human-like parking method [here](https://github.com/phattanaratjeedjeen-sudo/parallel_parking/tree/Human)
 
-### Carla-Ros
+### Carla-ROS
 
 #### Environment
 - OS: ubuntu 24.04
@@ -88,7 +88,7 @@ This package is devinded to 2 version
     # set park length to 6.2m
     python3 ~/park_ws/src/lka_bringup/scripts/update_spawn_config.py 6.2
 
-    # build and source everytimes when change park lenth
+    # build and source every time when changing park length
     colcon build --packages-select lka_bringup && source install/setup.bash
     ```
 
@@ -184,8 +184,8 @@ src/lka_bringup/
 └── scripts/
     ├── log_data.py                 -> logger output      
     ├── park_planning.py            -> main script
-    ├── plot_results.py             -> plot indivedual result
-    └── update_spawn_config.py      -> change front obstrucle spawn point
+        ├── plot_results.py             -> plot individual results
+        └── update_spawn_config.py      -> change front obstacle spawn point
 ```
 
 ### Pure Carla
@@ -207,7 +207,7 @@ To guarantee collision-free maneuvers, path planning is calculated using the cen
 </figure>
 
 ### Vehicle Parameters
-Below are the core vehicle(Tesla Model 3) parameters:
+Below are the core vehicle (Tesla Model 3) parameters:
 
 | Notation | Description | Default Value |
 | :------------------ | :---------- | :------------ |
@@ -260,6 +260,8 @@ $$
 C_{t,y} = y_t + R_{E,min} \sin\left(\psi_t + \frac{\pi}{2}\right)
 $$
 
+
+
 **Feasibility Check (Condition to Begin)**
 
 The distance from the start position to the target turning center $d_{Ct,Einit} = \sqrt{(C_{t,x} - x_s)^2 + (C_{t,y} - y_s)^2}$ must satisfy a minimum geometric bound. Where $\alpha$ is the angle between the starting lateral vector and the vector to $C_t$:
@@ -306,6 +308,10 @@ $$
 T_{e,y} = C_{i,y} + \frac{R_{E,init}}{R_{E,init} + R_{E,min}} (C_{t,y} - C_{i,y})
 $$
 
+$$
+\psi_{Te} = \text{atan2}(-C_{t,x} + C_{i,x}, C_{l,y} - C_{r,y})
+$$
+
 | Notation | Description | unit |
 | :--- | :--- | :--- | 
 | $L_{min}$          | Minimum required parking length to park without shunting            | m  |  
@@ -320,7 +326,8 @@ $$
 | $R_{E,min}$        | Minimum turning radius of the rear axle                             | m  |  
 | $\delta_{init}$    | Steering angle required for the first arc                           | rad| 
 | $C_i$              | Turning center of the initial (first) arc                           | m  | 
-| $T_e$              | Tangency point where the vehicle transitions between the two arcs   | m  | 
+| $T_e$              | Tangency point where the vehicle transitions between the two arcs   | m  |
+| $\psi_{Te}$        | Heading angle at the tangency point                                 | rad| 
 
 ### Crab-Like Parking
 When the parking spot is too tight for a single maneuver ($L_{car} < L < L_{min}$), the system employs a shunting strategy modeled after crab-walking. 
@@ -383,17 +390,17 @@ Below is how `single` and `crab-like` method works togather to achieve parking i
 The initial steering angle is set for the first turning maneuver, and the vehicle reverses until its yaw angle reaches the target yaw angle obtained from the calculation. The maneuver starts by moving the vehicle to the same x-coordinate as the leading parked vehicle. The vehicle then reverses with the specified steering angle until the calculated yaw angle is reached. Subsequently, the vehicle performs alternating forward-left and reverse-right maneuvers until the yaw angle is less than or equal to 2°.
 
 ## Simulation Method
-To test all planning method (single, crab-like, human-like). There are 2 parameter to vary
+To test all planning methods (single, crab-like, human-like), there are 2 parameters to vary:
 1. the parking spot length
 2. the maximum steering angle
-While vary these parameters. Drived car's spawn point, obstrucles size, park offset and target parking position are fixed.
+While varying these parameters, the ego vehicle's spawn point, obstacle sizes, park offset, and target parking position are fixed.
 
 | Notation(unit) | Description | Value(start/step/stop) | type |
 | --------  | -------- | -------- | -------- |
 | $\delta_{max}$(deg) | maximum steering angle               | 30/5/40     | vary |
 | $L$(m)              | park spot length                     | 5.2/0.5/7.2 | vary |
 | $c$(m)              | rear-front park offset               | 0.1         | fix  |
-| $p$(m)              | front obstrucle-car side distance    | 0.3         | fix  |
+| $p$(m)              | front obstacle-car side distance     | 0.3         | fix  |
 | $x_s, y_s$ (m)      | spawn position                       |             | fix  |
 | $x_f, y_f$ (m)      | target position                      |             | fix  |
 
@@ -418,7 +425,7 @@ Log parameters
   <figcaption><i>Comparison of number of gear changes, max steering angle and park length with both algorithms.</i></figcaption>
 </figure>
 
-For more clearify see heatmap below
+For more clarity, see the heatmaps below.
 
 <div align="center">
 
@@ -435,7 +442,7 @@ For more clearify see heatmap below
   <figcaption><i>Path shape comparison.</i></figcaption>
 </figure>
 
-Due to the huge amout differences change gear times of both approach. the human-like algorithm is sinificantly smoother than crab method. (the result at 5.2m spot length for crab method is not completely collect because of the large amout of trials)
+Due to the huge amount of difference in gear change times between both approaches, the human-like algorithm is significantly smoother than the crab method. (The result at a 5.2m spot length for the crab method is not completely correct because of the large amount of trials).
 
 ### Final lateral error
 
