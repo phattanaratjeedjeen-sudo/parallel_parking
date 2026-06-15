@@ -97,14 +97,15 @@ State 6  Parked            Apply hand-brake; log total shunting actions
 ## Diagrams
 
 ### Multi-Trial Process Flowchart
-
-![Multi-trial process flowchart](pic\image-2.png)
+<p align="center">
+ <img src="pic\image-2.png" width="700"> </p><br>
 
 ---
 
 ### Collision Check<br>
 
-![Collision check diagram](pic\image-1.png)
+<p align="center">
+ <img src="pic\image-1.png" width="700"> </p><br>
 
 > **Gap formula:**
 > ```
