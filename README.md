@@ -69,7 +69,7 @@ This package is devinded to 2 version
 1. Clone this package
     ```bash
     cd ~
-    git clone -b SINGL https://github.com/phattanaratjeedjeen-sudo/parallel_parking.git
+    git clone -b CRAB https://github.com/phattanaratjeedjeen-sudo/parallel_parking.git
     ```
 
 2. Set up environment
