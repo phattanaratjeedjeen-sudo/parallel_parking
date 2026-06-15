@@ -31,7 +31,7 @@ The core of the system calculates feasible paths using the vehicle's minimum tur
     Initiated when the space is tight but strictly larger than the vehicle footprint. The algorithm calculates the required lateral offset and executes a sequence of forward-backward shunting loops, alternating steering extremes to laterally shift the vehicle deeply into the spot without collisions.
 
 - **Human-Like Parking**
-    ( add here )
+    Deployed in constrained spaces as a highly efficient alternative. Using Finite State Machine logic, it prioritizes practical alignment over strict mathematical precision. By terminating corrective shunting once obstacles are cleared and the yaw error is minimal, it drastically reduces gear changes and computational load, delivering a faster, smoother maneuver.
 
 ### Limitations
 This project focuses on the core kinematics of parallel parking between two longitudinal obstacles. The simulated environment assumes the following constraints:
@@ -55,7 +55,7 @@ The algorithms are rigorously tested within the CARLA simulator integrated with 
 ## Use This Package
 This package is devinded to 2 version 
 - Carla-ROS: implement single trial and crab-like parking method 
-- Pure Carla: implement human-like parking method
+- Pure Carla: implement human-like parking method in [here](https://github.com/phattanaratjeedjeen-sudo/parallel_parking/tree/Human)
 
 ### Carla-Ros
 
@@ -69,7 +69,7 @@ This package is devinded to 2 version
 1. Clone this package
     ```bash
     cd ~
-    git clone -b CRAB https://github.com/phattanaratjeedjeen-sudo/parallel_parking.git
+    git clone https://github.com/phattanaratjeedjeen-sudo/parallel_parking.git
     ```
 
 2. Set up environment
@@ -169,6 +169,12 @@ This package is devinded to 2 version
 
 ### Carla-Ros
 ```text
+data
+├── car_info                        -> car dimension
+└── results                         -> all crab results
+material
+├── images                          -> images in readme
+└── reference                       
 src/lka_bringup/
 ├── config/
 │   └── objects.json                -> spawn configuration
@@ -301,20 +307,20 @@ T_{e,y} = C_{i,y} + \frac{R_{E,init}}{R_{E,init} + R_{E,min}} (C_{t,y} - C_{i,y}
 $$
 
 | Notation | Description | unit |
-| :--- | :--- | :--- |
-| $L_{min}$          | Minimum required parking length to park without shunting            | m   |
-| $R_{Bt, min}$      | Minimum turning radius of the vehicle's bounding box                | m   |
-| $x_s, y_s, \psi_s$ | Starting pose of the vehicle's rear axle (X, Y, Yaw)                | m   |
-| $x_t, y_t, \psi_t$ | Target pose of the vehicle's rear axle (X, Y, Yaw)                  | m   |
-| $C_t$              | Turning center of the target (final) arc                            | m   |
-| $\alpha$           | Angle between the starting lateral vector and the vector to $C_t$   | rad |
-| $d_{Ct,Einit}$     | Distance from the start position to the target turning center $C_t$ | m   |
-| $d_{Ct,Einit,min}$ | Minimum required distance to $C_t$ for a feasible single-trial path | m   |
-| $R_{E,init}$       | Turning radius of the first arc                                     | m   |
-| $R_{E,min}$        | Minimum turning radius of the rear axle                             | m   |
-| $\delta_{init}$    | Steering angle required for the first arc                           | rad |
-| $C_i$              | Turning center of the initial (first) arc                           |  |
-| $T_e$              | Tangency point where the vehicle transitions between the two arcs   |  |
+| :--- | :--- | :--- | 
+| $L_{min}$          | Minimum required parking length to park without shunting            | m  |  
+| $R_{Bt, min}$      | Minimum turning radius of the vehicle's bounding box                | m  |  
+| $x_s, y_s, \psi_s$ | Starting pose of the vehicle's rear axle (X, Y, Yaw)                | m  |  
+| $x_t, y_t, \psi_t$ | Target pose of the vehicle's rear axle (X, Y, Yaw)                  | m  |  
+| $C_t$              | Turning center of the target (final) arc                            | m  |  
+| $\alpha$           | Angle between the starting lateral vector and the vector to $C_t$   | rad| 
+| $d_{Ct,Einit}$     | Distance from the start position to the target turning center $C_t$ | m  | 
+| $d_{Ct,Einit,min}$ | Minimum required distance to $C_t$ for a feasible single-trial path | m  | 
+| $R_{E,init}$       | Turning radius of the first arc                                     | m  | 
+| $R_{E,min}$        | Minimum turning radius of the rear axle                             | m  |  
+| $\delta_{init}$    | Steering angle required for the first arc                           | rad| 
+| $C_i$              | Turning center of the initial (first) arc                           | m  | 
+| $T_e$              | Tangency point where the vehicle transitions between the two arcs   | m  | 
 
 ### Crab-Like Parking
 When the parking spot is too tight for a single maneuver ($L_{car} < L < L_{min}$), the system employs a shunting strategy modeled after crab-walking. 
@@ -350,15 +356,15 @@ $$
 N_{trials} = \left\lfloor \frac{d_{offset}}{2 \cdot \Delta y} + 0.5 \right\rfloor
 $$
 
-| Notation | Description | unit |
-| :--- | :--- | :--- |
-| $L_{car}$        | Total length of the vehicle                                      | m |  
-| $L$              | Length of the parking spot                                       | m |
-| $d_{offset}$     | Total lateral distance needed to shift into the parking spot     | m |
-| $l_{stroke}$     | Available longitudinal clearance for each shunting stroke        | m |
-| $offset_{limit}$ | Minimum safety clearance maintained from obstacles during shunts | m |
-| $\Delta y$       | Lateral displacement gained per single longitudinal stroke       | m |
-| $N_{trials}$     | Total number of required shunting loops (1 forward + 1 backward) | times |
+| Notation | Description | unit | Value |
+| :--- | :--- | :--- | :--- |
+| $L_{car}$        | Total length of the vehicle                                      | m | `4.80`|  
+| $L$              | Length of the parking spot                                       | m |       |
+| $d_{offset}$     | Total lateral distance needed to shift into the parking spot     | m |       |
+| $l_{stroke}$     | Available longitudinal clearance for each shunting stroke        | m |       |
+| $offset_{limit}$ | Minimum safety clearance maintained from obstacles during shunts | m | `0.10`|
+| $\Delta y$       | Lateral displacement gained per single longitudinal stroke       | m |       |
+| $N_{trials}$     | Total number of required shunting loops (1 forward + 1 backward) | times |   |
 
 Below is how `single` and `crab-like` method works togather to achieve parking in tiny spots.
 
@@ -374,6 +380,7 @@ Below is how `single` and `crab-like` method works togather to achieve parking i
   <figcaption><i>Flowchart of human-like parking methods.</i></figcaption>
 </figure>
 
+The initial steering angle is set for the first turning maneuver, and the vehicle reverses until its yaw angle reaches the target yaw angle obtained from the calculation. The maneuver starts by moving the vehicle to the same x-coordinate as the leading parked vehicle. The vehicle then reverses with the specified steering angle until the calculated yaw angle is reached. Subsequently, the vehicle performs alternating forward-left and reverse-right maneuvers until the yaw angle is less than or equal to 2°.
 
 ## Simulation Method
 To test all planning method (single, crab-like, human-like). There are 2 parameter to vary
