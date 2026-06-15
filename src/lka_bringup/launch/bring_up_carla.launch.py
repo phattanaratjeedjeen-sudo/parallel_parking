@@ -23,7 +23,7 @@ def generate_launch_description():
     )
     town = DeclareLaunchArgument(
         'town',
-        default_value='/home/iwa/carla/CarlaUE4/Content/Carla/Maps/OpenDrive/Town02_Opt.xodr'
+        default_value=os.path.expanduser('~/carla/CarlaUE4/Content/Carla/Maps/OpenDrive/Town02_Opt.xodr')
     )
     timeout = DeclareLaunchArgument(
         'timeout',

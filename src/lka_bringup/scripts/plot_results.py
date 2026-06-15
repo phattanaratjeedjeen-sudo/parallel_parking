@@ -14,8 +14,8 @@ from std_srvs.srv import Trigger
 class PlotResultsNode(Node):
     def __init__(self):
         super().__init__('result_plotter')
-        self.csv_dir = os.path.expanduser('~/park_ws/src/lka_bringup/data/results/csv')
-        self.plot_dir = os.path.expanduser('~/park_ws/src/lka_bringup/data/results/plot')
+        self.csv_dir = os.path.expanduser('~/park_ws/data/results/csv')
+        self.plot_dir = os.path.expanduser('~/park_ws/data/results/plot')
         os.makedirs(self.plot_dir, exist_ok=True)
         
         self.plot_srv = self.create_service(Trigger, '/carla/ego_vehicle/plot_results', self.plot_request_callback)

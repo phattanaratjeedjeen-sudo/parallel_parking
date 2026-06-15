@@ -73,7 +73,7 @@ class ParkingController(Node):
         self.change_gear_times = 0                      
         self.plot_triggered = False
 
-        self.log_dir = os.path.expanduser('~/park_ws/src/lka_bringup/data/results/logger')
+        self.log_dir = os.path.expanduser('~/park_ws/data/results/logger')
         os.makedirs(self.log_dir, exist_ok=True)
         self.log_file = self.get_next_log_filename()
         self.log_file_handle = open(self.log_file, 'w', encoding='utf-8')

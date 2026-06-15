@@ -4,7 +4,7 @@ import os
 
 def get_car_dimensions():
     vehicle_model = "tesla.model3"
-    output_dir = os.path.expanduser('~/park_ws/src/lka_bringup/data/car_info')
+    output_dir = os.path.expanduser('~/park_ws/data/car_info')
     output_file = os.path.join(output_dir, f"{vehicle_model}_dimensions.json")
 
     try:

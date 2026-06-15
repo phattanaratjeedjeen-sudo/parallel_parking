@@ -20,7 +20,7 @@ class ResultRecorder(Node):
         self.max_steer = None
         self.current_gear_changes = 0
 
-        self.data_dir = os.path.expanduser('~/park_ws/src/lka_bringup/data/results/csv')
+        self.data_dir = os.path.expanduser('~/park_ws/data/results/csv')
         os.makedirs(self.data_dir, exist_ok=True)
         self.csv_file = None
         self.csv_writer = None
